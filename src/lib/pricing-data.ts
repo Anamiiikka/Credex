@@ -4,7 +4,7 @@
 // See PRICING_DATA.md for full citations.
 // ============================================================
 
-import { ToolPricing, ToolName } from "@/types";
+import { ToolPricing, ToolName, PlanOption } from "@/types";
 
 /**
  * Complete pricing database for all supported AI tools.
