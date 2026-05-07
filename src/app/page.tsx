@@ -6,7 +6,7 @@ import { FormState, AuditResult } from "@/types";
 import { runAuditEngine } from "@/lib/audit-engine";
 
 export default function Home() {
-  const [auditResult, setAuditResult] = useState<AuditResult | null>(null);
+  const [, setAuditResult] = useState<AuditResult | null>(null);
 
   const handleAudit = async (state: FormState) => {
     // In Day 3 this will call the API, but for now we can just run the engine locally for preview
@@ -32,7 +32,7 @@ export default function Home() {
             AI Spend Auditor
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Find out if you're overpaying for AI tools. We'll analyze your stack and find savings.
+            Find out if you&apos;re overpaying for AI tools. We&apos;ll analyze your stack and find savings.
           </p>
         </div>
 

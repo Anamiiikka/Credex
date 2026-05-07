@@ -4,16 +4,14 @@ import {
   ToolEntry,
   ToolRecommendation,
   RecommendationAction,
-  ToolName,
-  PlanOption
+  ToolName
 } from "@/types";
 import {
   getToolDisplayName,
   getPlan,
   getPlansForTool,
   CREDEX_DISCOUNT_RATE,
-  SAVINGS_THRESHOLDS,
-  calculateMonthlyCost
+  SAVINGS_THRESHOLDS
 } from "./pricing-data";
 
 const TOOL_CATEGORIES: Record<ToolName, "chat" | "coding" | "api"> = {

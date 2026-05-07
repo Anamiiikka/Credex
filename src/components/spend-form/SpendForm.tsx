@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { FormState, ToolEntry, ToolName, UseCase } from "@/types";
-import { getPlansForTool, getPlan, calculateMonthlyCost } from "@/lib/pricing-data";
+import { FormState, ToolEntry, ToolName } from "@/types";
+import { getPlan, calculateMonthlyCost } from "@/lib/pricing-data";
 import { ToolEntryRow } from "./ToolEntryRow";
 import { TeamInfo } from "./TeamInfo";
 import { Button } from "@/components/ui/button";
@@ -22,8 +22,9 @@ export function SpendForm({ onSubmit }: { onSubmit: (state: FormState) => void }
     const saved = localStorage.getItem("credex-form");
     if (saved) {
       try {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setState(JSON.parse(saved));
-      } catch (e) {
+      } catch {
         localStorage.removeItem("credex-form");
       }
     }
