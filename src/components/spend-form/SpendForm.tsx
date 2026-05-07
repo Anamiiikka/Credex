@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { FormState, ToolEntry, ToolName, UseCase } from "@/types";
-import { getAllToolIds, getPlansForTool, getPlan, calculateMonthlyCost } from "@/lib/pricing-data";
+import { getPlansForTool, getPlan, calculateMonthlyCost } from "@/lib/pricing-data";
 import { ToolEntryRow } from "./ToolEntryRow";
 import { TeamInfo } from "./TeamInfo";
 import { Button } from "@/components/ui/button";
