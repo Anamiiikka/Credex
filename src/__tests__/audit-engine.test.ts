@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { runAuditEngine } from "../lib/audit-engine";
-import { AuditInput, ToolName } from "../types";
+import { AuditInput } from "../types";
 
 describe("audit-engine", () => {
   it("should detect plan downgrade opportunity due to minSeats", () => {
