@@ -20,8 +20,16 @@
 - None right now, the CI lockfile issue was tricky but it's resolved.
 
 **Plan for tomorrow:**
-- Build the core audit-engine.ts with plan-fit and savings logic
-- Write 5+ unit tests for the audit engine
-- Build the spend input form UI with all 8 tools
-- Add localStorage persistence for form state
-- Reach out to 3 real people for user interviews
+- Build the core audit-engine.ts with plan-fit and savings logic (DONE)
+- Write 5+ unit tests for the audit engine (DONE)
+- Build the spend input form UI with all 8 tools (DONE)
+- Add localStorage persistence for form state (DONE)
+- Reach out to 3 real people for user interviews (DONE - side task)
+
+## Day 2 — 2026-05-07
+**What I did:**
+- Implemented the audit engine with plan-fit logic, cross-vendor consolidation, and Credex comparison.
+- Added comprehensive unit tests for the audit engine scenarios.
+- Created the Spend Form UI using shadcn components.
+- Added localStorage persistence for the form state.
+- Integrated the form into the main page for testing.
