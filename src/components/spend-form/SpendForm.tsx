@@ -10,26 +10,26 @@ import { Card } from "@/components/ui/card";
 import { Plus, Calculator } from "lucide-react";
 
 export function SpendForm({ onSubmit }: { onSubmit: (state: FormState) => void }) {
-  const [state, setState] = useState<FormState>({
-    tools: [],
-    teamSize: 1,
-    useCase: "coding",
-  });
   const [isLoaded, setIsLoaded] = useState(false);
-  const [errors, setErrors] = useState<string[]>([]);
+  const [state, setState] = useState<FormState>(() => {
+    if (typeof window === "undefined") {
+      return { tools: [], teamSize: 1, useCase: "coding" };
+    }
+    try {
+      const saved = localStorage.getItem("credex-form");
+      if (saved) return JSON.parse(saved) as FormState;
+    } catch {
+      localStorage.removeItem("credex-form");
+    }
+    return { tools: [], teamSize: 1, useCase: "coding" };
+  });
 
   useEffect(() => {
-    const saved = localStorage.getItem("credex-form");
-    if (saved) {
-      try {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setState(JSON.parse(saved));
-      } catch {
-        localStorage.removeItem("credex-form");
-      }
-    }
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLoaded(true);
   }, []);
+
+  const [errors, setErrors] = useState<string[]>([]);
 
   useEffect(() => {
     if (isLoaded) {
