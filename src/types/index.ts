@@ -85,10 +85,11 @@ export interface AuditResult {
   totalCurrentSpend: number;
   totalOptimizedSpend: number;
   totalMonthlySavings: number;
+  totalCredexSavings: number;
   totalAnnualSavings: number;
   aiSummary?: string;
-  isOptimal: boolean; // true if savings < $100/mo
-  showCredexCTA: boolean; // true if savings > $500/mo
+  isAlreadyOptimal: boolean; // true if savings < $100/mo
+  isHighSavings: boolean; // true if savings > $500/mo
   createdAt: string;
 }
 
