@@ -16,13 +16,16 @@ export function SpendForm({ onSubmit }: { onSubmit: (state: FormState) => void }
     useCase: "coding",
   });
   const [isLoaded, setIsLoaded] = useState(false);
+  const [errors, setErrors] = useState<string[]>([]);
 
   useEffect(() => {
     const saved = localStorage.getItem("credex-form");
     if (saved) {
       try {
         setState(JSON.parse(saved));
-      } catch (e) {}
+      } catch (e) {
+        localStorage.removeItem("credex-form");
+      }
     }
     setIsLoaded(true);
   }, []);
@@ -34,12 +37,14 @@ export function SpendForm({ onSubmit }: { onSubmit: (state: FormState) => void }
   }, [state, isLoaded]);
 
   const addTool = () => {
+    const defaultToolId: ToolName = "chatgpt";
+    const defaultPlanId = "chatgpt_plus";
     const newTool: ToolEntry = {
       id: crypto.randomUUID(),
-      toolId: "chatgpt",
-      planId: "chatgpt_plus",
+      toolId: defaultToolId,
+      planId: defaultPlanId,
       seats: state.teamSize,
-      monthlySpend: 20 * state.teamSize, // default calculated spend
+      monthlySpend: calculateMonthlyCost(defaultToolId, defaultPlanId, state.teamSize),
     };
     setState(s => ({ ...s, tools: [...s.tools, newTool] }));
   };
@@ -56,7 +61,7 @@ export function SpendForm({ onSubmit }: { onSubmit: (state: FormState) => void }
         const updated = { ...t, ...updates };
         
         // Auto-calculate spend if tool or plan or seats changed
-        if (updates.toolId || updates.planId || updates.seats !== undefined) {
+        if ("toolId" in updates || "planId" in updates || "seats" in updates) {
           const plan = getPlan(updated.toolId, updated.planId);
           if (plan && plan.monthlyPricePerSeat > 0) {
             updated.monthlySpend = calculateMonthlyCost(updated.toolId, updated.planId, updated.seats);
@@ -67,7 +72,25 @@ export function SpendForm({ onSubmit }: { onSubmit: (state: FormState) => void }
     }));
   };
 
-  if (!isLoaded) return null;
+  const handleSubmit = () => {
+    const errs: string[] = [];
+    state.tools.forEach((t, i) => {
+      if (!t.toolId) errs.push(`Tool ${i + 1}: select a tool.`);
+      if (!t.planId) errs.push(`Tool ${i + 1}: select a plan.`);
+      if (t.seats < 1) errs.push(`Tool ${i + 1}: seats must be at least 1.`);
+    });
+    if (errs.length > 0) { setErrors(errs); return; }
+    setErrors([]);
+    onSubmit(state);
+  };
+
+  if (!isLoaded) return (
+    <div className="space-y-8 animate-pulse">
+      <div className="h-24 rounded-lg bg-muted" />
+      <div className="h-48 rounded-lg bg-muted" />
+      <div className="h-12 rounded-lg bg-muted" />
+    </div>
+  );
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
@@ -101,7 +124,13 @@ export function SpendForm({ onSubmit }: { onSubmit: (state: FormState) => void }
         </Button>
       </div>
 
-      <Button size="lg" className="w-full" onClick={() => onSubmit(state)} disabled={state.tools.length === 0}>
+      {errors.length > 0 && (
+        <ul className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive space-y-1">
+          {errors.map((e, i) => <li key={i}>• {e}</li>)}
+        </ul>
+      )}
+
+      <Button size="lg" className="w-full" onClick={handleSubmit} disabled={state.tools.length === 0}>
         <Calculator className="w-4 h-4 mr-2" /> Run Audit
       </Button>
     </div>
