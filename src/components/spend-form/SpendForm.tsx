@@ -125,7 +125,7 @@ export function SpendForm({ onSubmit }: { onSubmit: (state: FormState) => void }
       </div>
 
       {errors.length > 0 && (
-        <ul className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive space-y-1">
+        <ul className="rounded-md border border-destructive/40 bg-destructive/10 p-3 text-sm text-destructive space-y-1 animate-in fade-in slide-in-from-top-2 duration-300">
           {errors.map((e, i) => <li key={i}>• {e}</li>)}
         </ul>
       )}
