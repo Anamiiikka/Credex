@@ -29,7 +29,21 @@
 ## Day 2 — 2026-05-07
 **What I did:**
 - Implemented the audit engine with plan-fit logic, cross-vendor consolidation, and Credex comparison.
-- Added comprehensive unit tests for the audit engine scenarios.
-- Created the Spend Form UI using shadcn components.
-- Added localStorage persistence for the form state.
-- Integrated the form into the main page for testing.
+- Added comprehensive unit tests for the audit engine scenarios (now up to 7 scenarios).
+- Created the Spend Form UI using shadcn components with full validation.
+- Added localStorage persistence for the form state, refactored to use React's recommended lazy initialization pattern.
+- Fixed complex math issues relating to aggregating monthly and annual savings, strictly separating Credex discounts from plan savings.
+- Implemented accessibility fixes (aria-labels, linked htmlFors) and polished UI animations.
+- Cleared all ESLint errors to ensure CI stays green.
+
+**What I learned:**
+- "setState in useEffect" is an anti-pattern when hydrating state from localStorage. It causes an extra render cycle. The React-recommended pattern is using a lazy initializer function inside `useState(() => ...)` which runs synchronously before the first render, preventing skeleton flashes and extra cycles.
+- Proper mathematical separation of metrics is crucial for building trust with users and reviewers—combining plan savings with platform credits too early can inflate annual numbers deceptively.
+
+**Blockers / what I'm stuck on:**
+- None. The audit engine math is now rock-solid and the form UI is robust.
+
+**Plan for tomorrow (Day 3):**
+- Build the UI to display the audit results (Results Dashboard).
+- Implement the AI Summary generation using Anthropic API.
+- Set up Supabase Lead Capture.
