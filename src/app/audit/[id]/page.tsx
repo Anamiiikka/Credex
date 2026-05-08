@@ -2,63 +2,71 @@
 import CredexCTA from "@/components/results/CredexCTA";
 import SavingsHero from "@/components/results/SavingsHero";
 import ToolCard from "@/components/results/ToolCard";
-import { ToolRecommendation } from "@/types";
+import { supabase } from "@/lib/supabase";
+import { AuditResult, ToolRecommendation } from "@/types";
 
-export default function AuditResultPage() {
-  // Fetch audit results from Supabase in a server component
-  // For now, we'll use mock data.
-  const mockRecommendations: ToolRecommendation[] = [
-    {
-      tool: "GitHub Copilot",
-      currentPlan: { name: "Business", price: 19 },
-      recommendedPlan: { name: "Enterprise (via Credex)", price: 15 },
-      savings: 4,
-      reason: "Credex offers discounted seats for GitHub Copilot Enterprise.",
-      recommendedAction: "use_credex",
-      credexSavings: 3,
-    },
-    {
-      tool: "OpenAI API",
-      currentPlan: { name: "Pay-as-you-go", price: 250 },
-      recommendedPlan: { name: "Claude 3 Sonnet (via Credex)", price: 180 },
-      savings: 70,
-      reason: "For your use case, Claude 3 Sonnet provides similar performance at a lower cost.",
-      recommendedAction: "switch_vendor",
-      credexSavings: 36,
-    },
-  ];
+interface AuditResultPageProps {
+  params: Promise<{ id: string }>;
+}
 
-  const mockAuditData = {
-    totalMonthlySavings: 1234.56,
-    totalAnnualSavings: 14815,
-    totalCredexSavings: 340,
-    isAlreadyOptimal: false,
-    isHighSavings: true,
-    results: mockRecommendations,
-    aiSummary: "This is a mock AI summary.",
+export default async function AuditResultPage({ params }: AuditResultPageProps) {
+  const { id } = await params;
+
+  // Fetch audit results from Supabase
+  const { data: auditRecord, error } = await supabase
+    .from("audits")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error || !auditRecord) {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center p-4">
+        <div className="text-center max-w-md">
+          <h1 className="text-2xl font-bold text-slate-200 mb-2">Audit Not Found</h1>
+          <p className="text-slate-400">
+            The audit results you&apos;re looking for don&apos;t exist or have been deleted.
+          </p>
+        </div>
+      </main>
+    );
+  }
+
+  // Extract the full audit result from the stored data
+  const auditResults: AuditResult = auditRecord.results || {
+    recommendations: [],
+    totalMonthlySavings: 0,
+    totalCredexSavings: 0,
+    totalAnnualSavings: 0,
+    isAlreadyOptimal: true,
+    isHighSavings: false,
   };
+
+  const recommendations: ToolRecommendation[] = auditResults.recommendations || [];
 
   return (
     <main className="flex min-h-screen flex-col items-center p-4 md:p-12 lg:p-24">
       <div className="w-full max-w-4xl">
         <SavingsHero
-          totalMonthlySavings={mockAuditData.totalMonthlySavings}
-          totalAnnualSavings={mockAuditData.totalAnnualSavings}
-          totalCredexSavings={mockAuditData.totalCredexSavings}
-          isAlreadyOptimal={mockAuditData.isAlreadyOptimal}
+          totalMonthlySavings={auditResults.totalMonthlySavings}
+          totalAnnualSavings={auditResults.totalAnnualSavings}
+          totalCredexSavings={auditResults.totalCredexSavings}
+          isAlreadyOptimal={auditResults.isAlreadyOptimal}
         />
-        <div className="mt-12">
-          <h2 className="text-2xl font-bold text-slate-200 mb-4">
-            Recommendations
-          </h2>
-          {mockAuditData.results.map((rec, index) => (
-            <ToolCard key={index} recommendation={rec} />
-          ))}
-        </div>
+        {recommendations.length > 0 && (
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold text-slate-200 mb-4">
+              Recommendations
+            </h2>
+            {recommendations.map((rec, index) => (
+              <ToolCard key={index} recommendation={rec} />
+            ))}
+          </div>
+        )}
         <CredexCTA
-          totalMonthlySavings={mockAuditData.totalMonthlySavings}
-          isHighSavings={mockAuditData.isHighSavings}
-          isAlreadyOptimal={mockAuditData.isAlreadyOptimal}
+          totalMonthlySavings={auditResults.totalMonthlySavings}
+          isHighSavings={auditResults.isHighSavings}
+          isAlreadyOptimal={auditResults.isAlreadyOptimal}
         />
       </div>
     </main>
