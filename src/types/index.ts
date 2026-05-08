@@ -70,6 +70,8 @@ export interface ToolRecommendation {
   recommendedPlan: { name: string; price: number };
   savings: number;
   reason: string;
+  recommendedAction: RecommendationAction;
+  credexSavings?: number;
 }
 
 /** Full audit result */
@@ -114,7 +116,7 @@ export interface AuditRecord {
   tools: ToolEntry[];
   team_size: number;
   use_case: UseCase;
-  results: ToolRecommendation[];
+  results: AuditResult;
   total_monthly_savings: number;
   total_annual_savings: number;
   ai_summary?: string;

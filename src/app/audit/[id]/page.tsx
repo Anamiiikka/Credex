@@ -14,6 +14,8 @@ export default function AuditResultPage() {
       recommendedPlan: { name: "Enterprise (via Credex)", price: 15 },
       savings: 4,
       reason: "Credex offers discounted seats for GitHub Copilot Enterprise.",
+      recommendedAction: "use_credex",
+      credexSavings: 3,
     },
     {
       tool: "OpenAI API",
@@ -21,6 +23,8 @@ export default function AuditResultPage() {
       recommendedPlan: { name: "Claude 3 Sonnet (via Credex)", price: 180 },
       savings: 70,
       reason: "For your use case, Claude 3 Sonnet provides similar performance at a lower cost.",
+      recommendedAction: "switch_vendor",
+      credexSavings: 36,
     },
   ];
 

@@ -31,7 +31,22 @@ export function runAuditEngine(input: AuditInput): Omit<AuditResult, "id" | "cre
   let totalMonthlySavings = 0;
   let totalAnnualSavings = 0;
 
-  const recommendations: ToolRecommendation[] = [];
+  // Temporary type for internal recommendations (before transformation)
+  interface InternalRecommendation {
+    toolEntry: ToolEntry;
+    currentToolName: string;
+    currentPlanName: string;
+    currentMonthlyCost: number;
+    recommendedAction: RecommendationAction;
+    recommendedToolName?: string;
+    recommendedPlanName?: string;
+    newMonthlyCost: number;
+    monthlySavings: number;
+    credexSavings: number;
+    reason: string;
+  }
+
+  const recommendations: InternalRecommendation[] = [];
 
   // Group tools by category to find overlaps
   const toolsByCategory: Record<string, ToolEntry[]> = { chat: [], coding: [], api: [] };
@@ -155,8 +170,19 @@ export function runAuditEngine(input: AuditInput): Omit<AuditResult, "id" | "cre
   const isAlreadyOptimal = totalMonthlySavings < SAVINGS_THRESHOLDS.OPTIMAL;
   const isHighSavings = (totalMonthlySavings + totalCredexSavings) >= SAVINGS_THRESHOLDS.SHOW_CREDEX;
 
+  // Transform recommendations to match ToolRecommendation interface
+  const formattedRecommendations: ToolRecommendation[] = recommendations.map(r => ({
+    tool: r.currentToolName,
+    currentPlan: { name: r.currentPlanName, price: r.currentMonthlyCost },
+    recommendedPlan: { name: r.recommendedPlanName || r.currentPlanName, price: r.newMonthlyCost },
+    savings: r.monthlySavings,
+    reason: r.reason,
+    recommendedAction: r.recommendedAction,
+    credexSavings: r.credexSavings,
+  }));
+
   return {
-    recommendations,
+    recommendations: formattedRecommendations,
     totalCurrentSpend,
     totalOptimizedSpend,
     totalMonthlySavings,
@@ -166,3 +192,6 @@ export function runAuditEngine(input: AuditInput): Omit<AuditResult, "id" | "cre
     isHighSavings
   };
 }
+
+// Export alias for backwards compatibility
+export const runAudit = runAuditEngine;
