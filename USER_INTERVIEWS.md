@@ -107,3 +107,45 @@ free plan but their usage pattern suggests they'd benefit
 from a paid plan, surface that recommendation honestly. 
 The tool should optimize spend in both directions — 
 down AND up when justified.
+
+---
+
+## Interview 4 — Priya (Founder)
+**Role:** Founder, SaaS B2B Startup  
+**Company Stage:** Seed stage, 8 employees  
+**Date:** 2026-05-08
+
+**Summary:**
+Priya's team uses a mix of GitHub Copilot for developers and ChatGPT Plus for the marketing team. She manually approves these expenses on a company card each month but has no clear way to track ROI or if the spend is efficient. She feels the cost is a "black box" and would love a simple dashboard to see if they are on the right plans.
+
+**Direct Quotes:**
+1. "We have Copilot for our 3 engineers and ChatGPT for our 2 marketing folks. I think it's about $150 a month?"
+2. "Honestly, I just approve the credit card charge. I have no idea if we're on the best plan. It's a total black box."
+3. "If a free tool could just tell me 'you're good' or 'you could save $50/month by switching to X', I'd use it in a heartbeat. It's about peace of mind."
+
+**Most Surprising Thing:**
+Even for a small, manageable amount like ~$150/month, the mental overhead of not knowing if the spend is optimized is a source of low-grade anxiety for the founder. The value proposition isn't just saving money, it's providing certainty.
+
+**What This Changed About My Design:**
+The results page should not only show savings but also explicitly confirm which tools are *already* optimized. A "No Change Needed" card is just as valuable as a savings recommendation. This reinforces the tool's role as an impartial auditor, building trust.
+
+---
+
+## Interview 5 — David (Product Manager)
+**Role:** Senior Product Manager  
+**Company Stage:** Scale-up (150 employees)  
+**Date:** 2026-05-08
+
+**Summary:**
+David's product team uses various AI tools for research, user story generation, and data analysis (e.g., Gemini, ChatGPT). The procurement is decentralized; individual teams expense their tools. He suspects there is significant overlap and redundancy across the company, leading to wasted spend, but has no data to prove it.
+
+**Direct Quotes:**
+1. "My team uses Gemini Advanced, but I know the design team uses ChatGPT Plus. The data science team probably has their own API keys. It's the wild west."
+2. "I'm almost certain we're paying for the same capabilities multiple times across different vendors. I'd love to consolidate, but I can't make that case without data."
+3. "A report that shows 'you have 3 tools doing the same thing, consolidate to one and save $X' would be an instant win. I could take that to my director."
+
+**Most Surprising Thing:**
+In larger companies, the problem isn't just plan-fitting, it's vendor consolidation. The audit tool needs to identify functional overlaps between different tools, not just compare plans within the same tool.
+
+**What This Changed About My Design:**
+The audit engine needs a more sophisticated cross-vendor analysis rule. It should be able to recognize that, for a "writing" use case, having both ChatGPT Teams and Claude Pro might be redundant. The recommendation should explicitly suggest consolidating to a single vendor to maximize savings and streamline billing.
