@@ -33,6 +33,7 @@ export default function AuditResultPage() {
     totalAnnualSavings: 14815,
     totalCredexSavings: 340,
     isAlreadyOptimal: false,
+    isHighSavings: true,
     results: mockRecommendations,
     aiSummary: "This is a mock AI summary.",
   };
@@ -54,7 +55,11 @@ export default function AuditResultPage() {
             <ToolCard key={index} recommendation={rec} />
           ))}
         </div>
-        <CredexCTA totalMonthlySavings={mockAuditData.totalMonthlySavings} />
+        <CredexCTA
+          totalMonthlySavings={mockAuditData.totalMonthlySavings}
+          isHighSavings={mockAuditData.isHighSavings}
+          isAlreadyOptimal={mockAuditData.isAlreadyOptimal}
+        />
       </div>
     </main>
   );

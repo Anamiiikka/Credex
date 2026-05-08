@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
           total_annual_savings: auditResults.totalAnnualSavings,
           total_credex_savings: auditResults.totalCredexSavings,
           is_already_optimal: auditResults.isAlreadyOptimal,
-          ai_summary: auditResults.aiSummary,
+          is_high_savings: auditResults.isHighSavings,
         },
       ])
       .select("id")
