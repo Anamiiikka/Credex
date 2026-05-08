@@ -1,4 +1,5 @@
 
+import CredexCTA from "@/components/results/CredexCTA";
 import SavingsHero from "@/components/results/SavingsHero";
 import ToolCard from "@/components/results/ToolCard";
 import { ToolRecommendation } from "@/types";
@@ -41,8 +42,9 @@ export default function AuditResultPage({ params }: { params: { id: string } }) 
             <ToolCard key={index} recommendation={rec} />
           ))}
         </div>
-        {/* Credex CTA will go here */}
+        <CredexCTA totalMonthlySavings={mockAuditData.totalMonthlySavings} />
       </div>
     </main>
   );
+}
 }
