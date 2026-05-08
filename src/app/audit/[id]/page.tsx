@@ -47,4 +47,3 @@ export default function AuditResultPage({ params }: { params: { id: string } }) 
     </main>
   );
 }
-}

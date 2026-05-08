@@ -23,13 +23,13 @@ export default function CredexCTA({ totalMonthlySavings }: CredexCTAProps) {
             <CardTitle className="flex items-center justify-center gap-3">
               <PartyPopper className="text-amber-400" />
               <span className="text-xl font-bold text-slate-100">
-                You're Spending Wisely!
+                You&apos;re Spending Wisely!
               </span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-slate-300">
-              Your AI tool spend is already well-optimized. We couldn't find
+              Your AI tool spend is already well-optimized. We couldn&apos;t find
               any significant savings for you at this time. Great job!
             </p>
           </CardContent>
@@ -46,7 +46,7 @@ export default function CredexCTA({ totalMonthlySavings }: CredexCTAProps) {
         transition={{ delay: 0.5 }}
         className="mt-12"
       >
-        <Card className="bg-gradient-to-br from-purple-600/20 via-slate-800/50 to-slate-800/50 border-purple-500/50">
+        <Card className="bg-linear-to-br from-purple-600/20 via-slate-800/50 to-slate-800/50 border-purple-500/50">
           <CardHeader>
             <CardTitle className="flex items-center gap-3 text-2xl font-bold text-slate-50">
               <Rocket className="text-purple-400" />
