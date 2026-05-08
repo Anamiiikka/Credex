@@ -65,17 +65,11 @@ export type RecommendationAction =
 
 /** A single tool recommendation from the audit engine */
 export interface ToolRecommendation {
-  toolEntry: ToolEntry;
-  currentToolName: string;
-  currentPlanName: string;
-  currentMonthlyCost: number;
-  recommendedAction: RecommendationAction;
-  recommendedToolName?: string;
-  recommendedPlanName?: string;
-  newMonthlyCost: number;
-  monthlySavings: number;
+  tool: string;
+  currentPlan: { name: string; price: number };
+  recommendedPlan: { name: string; price: number };
+  savings: number;
   reason: string;
-  credexSavings?: number;
 }
 
 /** Full audit result */

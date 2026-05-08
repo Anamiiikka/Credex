@@ -1,12 +1,31 @@
 
 import SavingsHero from "@/components/results/SavingsHero";
+import ToolCard from "@/components/results/ToolCard";
+import { ToolRecommendation } from "@/types";
 
 export default function AuditResultPage({ params }: { params: { id: string } }) {
   // Fetch audit results from Supabase using params.id in a server component
   // For now, we'll use mock data.
+  const mockRecommendations: ToolRecommendation[] = [
+    {
+      tool: "GitHub Copilot",
+      currentPlan: { name: "Business", price: 19 },
+      recommendedPlan: { name: "Enterprise (via Credex)", price: 15 },
+      savings: 4,
+      reason: "Credex offers discounted seats for GitHub Copilot Enterprise.",
+    },
+    {
+      tool: "OpenAI API",
+      currentPlan: { name: "Pay-as-you-go", price: 250 },
+      recommendedPlan: { name: "Claude 3 Sonnet (via Credex)", price: 180 },
+      savings: 70,
+      reason: "For your use case, Claude 3 Sonnet provides similar performance at a lower cost.",
+    },
+  ];
+
   const mockAuditData = {
     totalMonthlySavings: 1234.56,
-    results: [],
+    results: mockRecommendations,
     aiSummary: "This is a mock AI summary.",
   };
 
@@ -14,7 +33,14 @@ export default function AuditResultPage({ params }: { params: { id: string } }) 
     <main className="flex min-h-screen flex-col items-center p-4 md:p-12 lg:p-24">
       <div className="w-full max-w-4xl">
         <SavingsHero totalMonthlySavings={mockAuditData.totalMonthlySavings} />
-        {/* Tool recommendation cards will go here */}
+        <div className="mt-12">
+          <h2 className="text-2xl font-bold text-slate-200 mb-4">
+            Recommendations
+          </h2>
+          {mockAuditData.results.map((rec, index) => (
+            <ToolCard key={index} recommendation={rec} />
+          ))}
+        </div>
         {/* Credex CTA will go here */}
       </div>
     </main>
