@@ -141,9 +141,4 @@ export interface SummaryApiResponse {
   error?: string;
 }
 
-/** Form state for localStorage persistence */
-export interface FormState {
-  tools: ToolEntry[];
-  teamSize: number;
-  useCase: UseCase;
-}
+

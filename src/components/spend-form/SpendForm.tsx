@@ -1,23 +1,26 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { FormState, ToolEntry, ToolName } from "@/types";
+import { useRouter } from "next/navigation";
+import { AuditInput, ToolEntry, ToolName } from "@/types";
 import { getPlan, calculateMonthlyCost } from "@/lib/pricing-data";
 import { ToolEntryRow } from "./ToolEntryRow";
 import { TeamInfo } from "./TeamInfo";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Plus, Calculator } from "lucide-react";
+import { Plus, Calculator, Loader2 } from "lucide-react";
 
-export function SpendForm({ onSubmit }: { onSubmit: (state: FormState) => void }) {
+export function SpendForm() {
+  const router = useRouter();
   const [isLoaded, setIsLoaded] = useState(false);
-  const [state, setState] = useState<FormState>(() => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [state, setState] = useState<AuditInput>(() => {
     if (typeof window === "undefined") {
       return { tools: [], teamSize: 1, useCase: "coding" };
     }
     try {
       const saved = localStorage.getItem("credex-form");
-      if (saved) return JSON.parse(saved) as FormState;
+      if (saved) return JSON.parse(saved) as AuditInput;
     } catch {
       localStorage.removeItem("credex-form");
     }
@@ -61,7 +64,6 @@ export function SpendForm({ onSubmit }: { onSubmit: (state: FormState) => void }
         if (t.id !== id) return t;
         const updated = { ...t, ...updates };
         
-        // Auto-calculate spend if tool or plan or seats changed
         if ("toolId" in updates || "planId" in updates || "seats" in updates) {
           const plan = getPlan(updated.toolId, updated.planId);
           if (plan && plan.monthlyPricePerSeat > 0) {
@@ -73,7 +75,7 @@ export function SpendForm({ onSubmit }: { onSubmit: (state: FormState) => void }
     }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const errs: string[] = [];
     state.tools.forEach((t, i) => {
       if (!t.toolId) errs.push(`Tool ${i + 1}: select a tool.`);
@@ -82,7 +84,27 @@ export function SpendForm({ onSubmit }: { onSubmit: (state: FormState) => void }
     });
     if (errs.length > 0) { setErrors(errs); return; }
     setErrors([]);
-    onSubmit(state);
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/audit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(state),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to submit audit.");
+      }
+
+      const { auditId } = await response.json();
+      router.push(`/audit/${auditId}`);
+
+    } catch (error) {
+      setErrors([error instanceof Error ? error.message : "An unknown error occurred."]);
+      setIsSubmitting(false);
+    }
   };
 
   if (!isLoaded) return (
@@ -120,7 +142,7 @@ export function SpendForm({ onSubmit }: { onSubmit: (state: FormState) => void }
           </div>
         )}
 
-        <Button variant="outline" onClick={addTool} className="w-full">
+        <Button variant="outline" onClick={addTool} className="w-full" disabled={isSubmitting}>
           <Plus className="w-4 h-4 mr-2" /> Add AI Tool
         </Button>
       </div>
@@ -131,8 +153,22 @@ export function SpendForm({ onSubmit }: { onSubmit: (state: FormState) => void }
         </ul>
       )}
 
-      <Button size="lg" className="w-full" onClick={handleSubmit} disabled={state.tools.length === 0}>
-        <Calculator className="w-4 h-4 mr-2" /> Run Audit
+      <Button 
+        size="lg" 
+        className="w-full" 
+        onClick={handleSubmit} 
+        disabled={state.tools.length === 0 || isSubmitting}
+      >
+        {isSubmitting ? (
+          <>
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            Analyzing...
+          </>
+        ) : (
+          <>
+            <Calculator className="w-4 h-4 mr-2" /> Run Audit
+          </>
+        )}
       </Button>
     </div>
   );
