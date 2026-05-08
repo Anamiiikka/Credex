@@ -23,9 +23,9 @@ describe("audit-engine", () => {
     const rec = result.recommendations[0];
     
     expect(rec.recommendedAction).toBe("downgrade");
-    expect(rec.recommendedPlanName).toBe("Plus");
-    expect(rec.newMonthlyCost).toBe(100); // 5 seats * $20
-    expect(rec.monthlySavings).toBe(7500 - 100);
+    expect(rec.recommendedPlan.name).toBe("Plus");
+    expect(rec.recommendedPlan.price).toBe(100); // 5 seats * $20
+    expect(rec.savings).toBe(7500 - 100);
   });
 
   it("should recommend consolidating cross-vendor tools", () => {
@@ -47,14 +47,14 @@ describe("audit-engine", () => {
     const result = runAuditEngine(input);
     
     // Should have 3 recommendations
-    const chatRecs = result.recommendations.filter(r => r.toolEntry.toolId === 'claude' || r.toolEntry.toolId === 'chatgpt');
+    const chatRecs = result.recommendations.filter(r => r.tool === 'Claude' || r.tool === 'ChatGPT');
     
     const consolidated = chatRecs.find(r => r.recommendedAction === 'consolidate');
     expect(consolidated).toBeDefined();
-    expect(consolidated?.toolEntry.toolId).toBe('claude'); // Because it's cheaper, it gets dropped
-    expect(consolidated?.newMonthlyCost).toBe(100);
-    expect(consolidated?.monthlySavings).toBe(100);
-    expect(consolidated?.recommendedToolName).toBe("ChatGPT");
+    expect(consolidated?.tool).toBe('Claude'); // Because it's cheaper, it gets dropped
+    expect(consolidated?.recommendedPlan.price).toBe(100);
+    expect(consolidated?.savings).toBe(100);
+    expect(consolidated?.reason).toContain('ChatGPT');
   });
 
   it("should calculate Credex savings for API tools without changing plans", () => {
@@ -70,7 +70,7 @@ describe("audit-engine", () => {
     const rec = result.recommendations[0];
 
     expect(rec.recommendedAction).toBe("use_credex");
-    expect(rec.newMonthlyCost).toBe(1000); // Cost remains same but with credex savings
+    expect(rec.recommendedPlan.price).toBe(1000); // Cost remains same but with credex savings
     expect(rec.credexSavings).toBe(200); // 20% of 1000
     expect(result.totalMonthlySavings).toBe(0);
   });
@@ -108,7 +108,7 @@ describe("audit-engine", () => {
     const resultUpgrade = runAuditEngine(inputUpgrade);
     const recUpgrade = resultUpgrade.recommendations[0];
     expect(recUpgrade.recommendedAction).toBe("upgrade");
-    expect(recUpgrade.recommendedPlanName).toBe("Teams");
+    expect(recUpgrade.recommendedPlan.name).toBe("Teams");
   });
 
   it("should set isHighSavings if total savings >= 500", () => {
