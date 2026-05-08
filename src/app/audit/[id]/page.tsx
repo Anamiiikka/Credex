@@ -1,72 +1,96 @@
 
-import CredexCTA from "@/components/results/CredexCTA";
+import { supabase } from "@/lib/supabase";
+import { notFound } from "next/navigation";
+import { Metadata } from "next";
 import SavingsHero from "@/components/results/SavingsHero";
 import ToolCard from "@/components/results/ToolCard";
-import { supabase } from "@/lib/supabase";
+import CredexCTA from "@/components/results/CredexCTA";
 import { AuditResult, ToolRecommendation } from "@/types";
 
-interface AuditResultPageProps {
-  params: Promise<{ id: string }>;
+interface Props {
+  params: { id: string };
 }
 
-export default async function AuditResultPage({ params }: AuditResultPageProps) {
-  const { id } = await params;
-
-  // Fetch audit results from Supabase
-  const { data: auditRecord, error } = await supabase
+// Dynamic OG tags per audit
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { data } = await supabase
     .from("audits")
-    .select("*")
-    .eq("id", id)
+    .select("total_monthly_savings")
+    .eq("id", params.id)
     .single();
 
-  if (error || !auditRecord) {
-    return (
-      <main className="flex min-h-screen flex-col items-center justify-center p-4">
-        <div className="text-center max-w-md">
-          <h1 className="text-2xl font-bold text-slate-200 mb-2">Audit Not Found</h1>
-          <p className="text-slate-400">
-            The audit results you&apos;re looking for don&apos;t exist or have been deleted.
-          </p>
-        </div>
-      </main>
-    );
-  }
+  const savings = data?.total_monthly_savings ?? 0;
 
-  // Extract the full audit result from the stored data
-  const auditResults: AuditResult = auditRecord.results || {
-    recommendations: [],
-    totalMonthlySavings: 0,
-    totalCredexSavings: 0,
-    totalAnnualSavings: 0,
-    isAlreadyOptimal: true,
-    isHighSavings: false,
+  return {
+    title: savings > 0
+      ? `Save $${Math.round(savings)}/mo on AI tools`
+      : "Your AI Spend Audit Results",
+    description: savings > 0
+      ? `Found $${Math.round(savings * 12)}/year in AI tool savings.`
+      : "See where your team can optimize AI tool spend.",
+    openGraph: {
+      title: savings > 0
+        ? `I could save $${Math.round(savings)}/mo on AI tools 🤯`
+        : "My AI Spend Audit",
+      description: "Free audit at credex.rocks",
+    },
+    twitter: { card: "summary_large_image" },
   };
+}
 
-  const recommendations: ToolRecommendation[] = auditResults.recommendations || [];
+export default async function AuditResultPage({ params }: Props) {
+  const { data, error } = await supabase
+    .from("audits")
+    .select("*")
+    .eq("id", params.id)
+    .single();
+
+  if (error || !data) notFound();
+
+  const auditResult: AuditResult = data.results;
+  const recommendations: ToolRecommendation[] = auditResult.recommendations;
 
   return (
     <main className="flex min-h-screen flex-col items-center p-4 md:p-12 lg:p-24">
       <div className="w-full max-w-4xl">
+        {/* Audit context */}
+        <p className="text-center text-sm text-slate-400 mb-6">
+          {data.tools.length} tool{data.tools.length !== 1 ? "s" : ""} audited
+          &nbsp;·&nbsp; Team of {data.team_size}
+          &nbsp;·&nbsp; {data.use_case} use case
+        </p>
+
         <SavingsHero
-          totalMonthlySavings={auditResults.totalMonthlySavings}
-          totalAnnualSavings={auditResults.totalAnnualSavings}
-          totalCredexSavings={auditResults.totalCredexSavings}
-          isAlreadyOptimal={auditResults.isAlreadyOptimal}
+          totalMonthlySavings={auditResult.totalMonthlySavings}
+          totalAnnualSavings={auditResult.totalAnnualSavings}
+          totalCredexSavings={auditResult.totalCredexSavings}
+          isAlreadyOptimal={auditResult.isAlreadyOptimal}
         />
-        {recommendations.length > 0 && (
-          <div className="mt-12">
-            <h2 className="text-2xl font-bold text-slate-200 mb-4">
-              Recommendations
-            </h2>
-            {recommendations.map((rec, index) => (
-              <ToolCard key={index} recommendation={rec} />
-            ))}
+
+        <div className="mt-12">
+          <h2 className="text-2xl font-bold text-slate-200 mb-4">
+            Recommendations
+          </h2>
+          {recommendations.map((rec) => (
+            <ToolCard
+              key={`${rec.tool}-${rec.recommendedAction}`}
+              recommendation={rec}
+            />
+          ))}
+        </div>
+
+        {/* AI summary if available */}
+        {data.ai_summary && (
+          <div className="mt-8 p-4 bg-slate-800/50 border border-slate-700 rounded-lg">
+            <p className="text-sm font-medium text-slate-400 mb-2">AI Analysis</p>
+            <p className="text-slate-300 text-sm leading-relaxed">{data.ai_summary}</p>
           </div>
         )}
+
         <CredexCTA
-          totalMonthlySavings={auditResults.totalMonthlySavings}
-          isHighSavings={auditResults.isHighSavings}
-          isAlreadyOptimal={auditResults.isAlreadyOptimal}
+          totalMonthlySavings={auditResult.totalMonthlySavings}
+          isHighSavings={auditResult.isHighSavings}
+          isAlreadyOptimal={auditResult.isAlreadyOptimal}
         />
       </div>
     </main>
