@@ -47,3 +47,55 @@
 - Build the UI to display the audit results (Results Dashboard).
 - Implement the AI Summary generation using Anthropic API.
 - Set up Supabase Lead Capture.
+
+## Day 3 — 2026-05-08
+
+**Hours worked:** 4
+
+**What I did:**
+- Built SavingsHero component with animated count-up numbers using framer-motion and react-intersection-observer
+- Created ToolCard component with action-aware color badges and per-recommendation styling (downgrade/consolidate/credex/etc.)
+- Implemented CredexCTA with three savings tiers: optimal (<$100), mid-range ($100–$500), and high savings (>$500)
+- Fixed critical framer-motion API issue (motion.animate → animate function import)
+- Updated types to match audit engine output format (ToolRecommendation with recommendedAction and credexSavings fields)
+- Transformed audit engine to return public ToolRecommendation format instead of internal recommendation objects
+- Built POST /api/audit route with input validation, Supabase storage, and proper error handling
+- Connected SpendForm to the API with correct response key matching (id instead of auditId)
+- Updated audit results page to fetch real data from Supabase instead of mock data
+- Added dynamic metadata generation for OG tags (shows savings amount in title/description per audit)
+- Fixed test suite: updated all 4 failing audit-engine tests to match new ToolRecommendation format
+- All 7 tests now passing (100% pass rate)
+
+**What I learned:**
+- framer-motion has two different animation APIs: motion.animate (DOM API for elements) and animate (value interpolation API for numbers). The documentation distinction between them is subtle but critical.
+- TypeScript makes it easy to catch format mismatches when transforming data between internal and public formats. By having explicit interfaces for both, bugs surface immediately.
+- Using stable keys (like `${tool}-${action}`) instead of array indices prevents React reconciliation bugs when lists might reorder in the future.
+- Next.js 15 has async params in route handlers, requiring `await params` before destructuring.
+
+**Blockers / what I'm stuck on:**
+- None. The end-to-end flow from form submission → audit execution → results page display is now fully functional.
+
+**5 Day-3 Commits:**
+1. ✅ fix: resolve framer-motion animate API usage and add missing savings metrics
+2. ✅ feat: build per-tool recommendation cards with savings breakdown and action badges
+3. ✅ feat: add Credex CTA section for high-savings audits and honest optimal state message
+4. ✅ feat: implement POST /api/audit route with Supabase storage and audit engine
+5. ✅ feat: connect form submission to API and navigate to results page
+
+**CI Status:** Green ✅
+
+**Plan for tomorrow (Day 4):**
+- Implement AI summary generation using Anthropic API
+- Build lead capture form on results page
+- Set up email capture in Supabase
+- Add form validation and honeypot field for spam prevention
+- "setState in useEffect" is an anti-pattern when hydrating state from localStorage. It causes an extra render cycle. The React-recommended pattern is using a lazy initializer function inside `useState(() => ...)` which runs synchronously before the first render, preventing skeleton flashes and extra cycles.
+- Proper mathematical separation of metrics is crucial for building trust with users and reviewers—combining plan savings with platform credits too early can inflate annual numbers deceptively.
+
+**Blockers / what I'm stuck on:**
+- None. The audit engine math is now rock-solid and the form UI is robust.
+
+**Plan for tomorrow (Day 3):**
+- Build the UI to display the audit results (Results Dashboard).
+- Implement the AI Summary generation using Anthropic API.
+- Set up Supabase Lead Capture.
