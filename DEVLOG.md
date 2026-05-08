@@ -50,45 +50,53 @@
 
 ## Day 3 — 2026-05-08
 
-**Hours worked:** 4
+**Hours worked:** ~4
 
-**What I did:**
-- Built SavingsHero component with animated count-up numbers using framer-motion and react-intersection-observer
-- Created ToolCard component with action-aware color badges and per-recommendation styling (downgrade/consolidate/credex/etc.)
-- Implemented CredexCTA with three savings tiers: optimal (<$100), mid-range ($100–$500), and high savings (>$500)
-- Fixed critical framer-motion API issue (motion.animate → animate function import)
-- Updated types to match audit engine output format (ToolRecommendation with recommendedAction and credexSavings fields)
-- Transformed audit engine to return public ToolRecommendation format instead of internal recommendation objects
-- Built POST /api/audit route with input validation, Supabase storage, and proper error handling
-- Connected SpendForm to the API with correct response key matching (id instead of auditId)
-- Updated audit results page to fetch real data from Supabase instead of mock data
-- Added dynamic metadata generation for OG tags (shows savings amount in title/description per audit)
-- Fixed test suite: updated all 4 failing audit-engine tests to match new ToolRecommendation format
-- All 7 tests now passing (100% pass rate)
+**What I built:**
+- SavingsHero with framer-motion count-up animation, annual/Credex 
+  breakdown, and optimal state handling
+- ToolCard with action-aware color-coded badges (downgrade/consolidate/
+  use_credex/keep_current), money formatting, and Credex callout
+- CredexCTA with three tiers: optimal (<$100), mid-range ($100–$500), 
+  high savings (>$500)
+- POST /api/audit — input validation, audit engine, full results stored 
+  in Supabase, returns UUID
+- /audit/[id] server component — fetches from Supabase, notFound() on 
+  missing ID, dynamic OG/Twitter meta tags per audit
+- Fixed all 4 failing tests after ToolRecommendation type update
+- 7 commits pushed, CI green
+
+**Bugs I hit and fixed:**
+- framer-motion: motion.animate is not the value interpolation API. 
+  The correct import is animate (standalone function) from framer-motion. 
+  motion.animate targets DOM elements; animate(0, end, { onUpdate }) 
+  interpolates numeric values.
+- API route was storing results: auditResults.recommendations (array) 
+  instead of results: auditResults (full object). The results page 
+  needs isHighSavings, totalCredexSavings etc. — all of which live 
+  on the root object, not the recommendations array.
+- Response key mismatch: API returned { auditId } but form handler 
+  read data.id — fixed to { id } consistently.
+- CredexCTA had bg-linear-to-br (invalid) instead of bg-gradient-to-br.
+- CredexCTA returned null for $100–$500 range — blank section with no 
+  CTA. Added mid-range tier.
 
 **What I learned:**
-- framer-motion has two different animation APIs: motion.animate (DOM API for elements) and animate (value interpolation API for numbers). The documentation distinction between them is subtle but critical.
-- TypeScript makes it easy to catch format mismatches when transforming data between internal and public formats. By having explicit interfaces for both, bugs surface immediately.
-- Using stable keys (like `${tool}-${action}`) instead of array indices prevents React reconciliation bugs when lists might reorder in the future.
-- Next.js 15 has async params in route handlers, requiring `await params` before destructuring.
-
-**Blockers / what I'm stuck on:**
-- None. The end-to-end flow from form submission → audit execution → results page display is now fully functional.
-
-**5 Day-3 Commits:**
-1. ✅ fix: resolve framer-motion animate API usage and add missing savings metrics
-2. ✅ feat: build per-tool recommendation cards with savings breakdown and action badges
-3. ✅ feat: add Credex CTA section for high-savings audits and honest optimal state message
-4. ✅ feat: implement POST /api/audit route with Supabase storage and audit engine
-5. ✅ feat: connect form submission to API and navigate to results page
-
-**CI Status:** Green ✅
+- generateMetadata in Next.js App Router runs server-side — social 
+  scrapers read raw HTML so OG tags work correctly per audit ID without 
+  any client JS.
+- Storing the full AuditResult object in Supabase (not just the 
+  recommendations array) is critical — the results page needs 
+  isHighSavings, totalCredexSavings, isAlreadyOptimal to render 
+  correctly. Storing a subset forces you to recalculate on read.
 
 **Plan for tomorrow (Day 4):**
-- Implement AI summary generation using Anthropic API
-- Build lead capture form on results page
-- Set up email capture in Supabase
-- Add form validation and honeypot field for spam prevention
+- Anthropic API integration for AI-generated audit summary
+- Templated fallback summary when API is unavailable
+- Lead capture form on results page (email + company + role)
+- Honeypot field for bot protection
+- POST /api/leads Supabase storage
+- Resend email notification on lead capture
 - "setState in useEffect" is an anti-pattern when hydrating state from localStorage. It causes an extra render cycle. The React-recommended pattern is using a lazy initializer function inside `useState(() => ...)` which runs synchronously before the first render, preventing skeleton flashes and extra cycles.
 - Proper mathematical separation of metrics is crucial for building trust with users and reviewers—combining plan savings with platform credits too early can inflate annual numbers deceptively.
 
