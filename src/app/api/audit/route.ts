@@ -1,5 +1,5 @@
 
-import { runAudit } from "@/lib/audit-engine";
+import { runAuditEngine } from "@/lib/audit-engine";
 import { supabase } from "@/lib/supabase";
 import { AuditInput } from "@/types";
 import { NextRequest, NextResponse } from "next/server";
@@ -8,10 +8,24 @@ export async function POST(req: NextRequest) {
   try {
     const auditInput: AuditInput = await req.json();
 
-    // 1. Run the audit engine
-    const auditResults = runAudit(auditInput);
+    // Validate input
+    if (!auditInput.tools || auditInput.tools.length === 0) {
+      return NextResponse.json(
+        { error: "No tools provided." },
+        { status: 400 }
+      );
+    }
+    if (!auditInput.teamSize || auditInput.teamSize < 1) {
+      return NextResponse.json(
+        { error: "Invalid team size." },
+        { status: 400 }
+      );
+    }
 
-    // 2. Store results in Supabase
+    // Run the audit engine
+    const auditResults = runAuditEngine(auditInput);
+
+    // Store full results in Supabase
     const { data, error } = await supabase
       .from("audits")
       .insert([
@@ -19,12 +33,11 @@ export async function POST(req: NextRequest) {
           tools: auditInput.tools,
           team_size: auditInput.teamSize,
           use_case: auditInput.useCase,
-          results: auditResults.recommendations,
+          results: auditResults,
           total_monthly_savings: auditResults.totalMonthlySavings,
           total_annual_savings: auditResults.totalAnnualSavings,
           total_credex_savings: auditResults.totalCredexSavings,
           is_already_optimal: auditResults.isAlreadyOptimal,
-          is_high_savings: auditResults.isHighSavings,
         },
       ])
       .select("id")
@@ -38,8 +51,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 3. Return the new audit ID
-    return NextResponse.json({ auditId: data.id });
+    return NextResponse.json({ id: data.id }, { status: 201 });
     
   } catch (error) {
     console.error("API error:", error);

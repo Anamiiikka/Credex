@@ -98,8 +98,8 @@ export function SpendForm() {
         throw new Error(errorData.error || "Failed to submit audit.");
       }
 
-      const { auditId } = await response.json();
-      router.push(`/audit/${auditId}`);
+      const { id } = await response.json();
+      router.push(`/audit/${id}`);
 
     } catch (error) {
       setErrors([error instanceof Error ? error.message : "An unknown error occurred."]);
