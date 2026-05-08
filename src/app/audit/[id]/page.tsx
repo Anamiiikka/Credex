@@ -4,8 +4,8 @@ import SavingsHero from "@/components/results/SavingsHero";
 import ToolCard from "@/components/results/ToolCard";
 import { ToolRecommendation } from "@/types";
 
-export default function AuditResultPage({ params }: { params: { id: string } }) {
-  // Fetch audit results from Supabase using params.id in a server component
+export default function AuditResultPage() {
+  // Fetch audit results from Supabase in a server component
   // For now, we'll use mock data.
   const mockRecommendations: ToolRecommendation[] = [
     {
@@ -26,6 +26,9 @@ export default function AuditResultPage({ params }: { params: { id: string } }) 
 
   const mockAuditData = {
     totalMonthlySavings: 1234.56,
+    totalAnnualSavings: 14815,
+    totalCredexSavings: 340,
+    isAlreadyOptimal: false,
     results: mockRecommendations,
     aiSummary: "This is a mock AI summary.",
   };
@@ -33,7 +36,12 @@ export default function AuditResultPage({ params }: { params: { id: string } }) 
   return (
     <main className="flex min-h-screen flex-col items-center p-4 md:p-12 lg:p-24">
       <div className="w-full max-w-4xl">
-        <SavingsHero totalMonthlySavings={mockAuditData.totalMonthlySavings} />
+        <SavingsHero
+          totalMonthlySavings={mockAuditData.totalMonthlySavings}
+          totalAnnualSavings={mockAuditData.totalAnnualSavings}
+          totalCredexSavings={mockAuditData.totalCredexSavings}
+          isAlreadyOptimal={mockAuditData.isAlreadyOptimal}
+        />
         <div className="mt-12">
           <h2 className="text-2xl font-bold text-slate-200 mb-4">
             Recommendations

@@ -22,6 +22,8 @@ export async function POST(req: NextRequest) {
           results: auditResults.recommendations,
           total_monthly_savings: auditResults.totalMonthlySavings,
           total_annual_savings: auditResults.totalAnnualSavings,
+          total_credex_savings: auditResults.totalCredexSavings,
+          is_already_optimal: auditResults.isAlreadyOptimal,
           ai_summary: auditResults.aiSummary,
         },
       ])
