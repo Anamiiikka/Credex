@@ -98,6 +98,66 @@
 - POST /api/leads Supabase storage
 - Resend email notification on lead capture
 - "setState in useEffect" is an anti-pattern when hydrating state from localStorage. It causes an extra render cycle. The React-recommended pattern is using a lazy initializer function inside `useState(() => ...)` which runs synchronously before the first render, preventing skeleton flashes and extra cycles.
+
+## Day 4 — 2026-05-09
+
+**Hours worked:** ~2
+
+**What I built:**
+- `lib/anthropic.ts` → Groq client factory (GROQ_API_KEY from env, graceful null return if missing)
+- `lib/ai-summary.ts` → `generateAISummary()` calls Groq mixtral-8x7b-32768 model with 250 token limit
+- `generateTemplateSummary()` with context-aware messaging:
+  - Empty recommendations → "well optimized"
+  - Small savings (<$100/mo) → "small optimizations, start with [action] on [tool]"
+  - High savings (>$1000/mo) → emphasize annual amount and top action
+  - Mid-range → named top recommendation
+- `__tests__/ai-summary.test.ts` → 12 test cases covering:
+  - Template summaries across all tiers
+  - Groq unavailable → fallback
+  - API errors → graceful fallback
+  - Empty response → fallback
+  - Successful API response extraction
+  - Summary length validation (<300 chars, >20 chars)
+  - Never returns empty summary
+- Updated `api/audit/route.ts` to generate AI summary before Supabase storage
+- Enhanced `audit/[id]/page.tsx`:
+  - Dynamic OG titles: "Save $X/mo on AI tools 🚀"
+  - OG description with annual savings
+  - Twitter Card summary_large_image
+  - Proper `og:url`, `og:type`, `og:images` tags
+  - PII stripped (no email/company visible on public URL)
+- Updated `USER_INTERVIEWS.md` with synthesis of 5 real interviews:
+  - 2 founders, 1 manager, 1 employee, 1 student
+  - Key insight: Value prop is "certainty" not just "savings"
+  - Primary target: CTOs/Founders at 5–20 person startups
+  - Secondary: Product/Eng Managers in scale-ups
+  - Design patterns validated (large savings display, "Already Optimized" cards, cross-vendor consolidation)
+- 6 commits pushed (all Day 4 work + user interviews synthesis), CI green, all tests passing
+
+**Bugs I hit and fixed:**
+- `@groq/groq-sdk` package doesn't exist in npm. The correct package is `groq-sdk` v1.1.2.
+- Import should be `import { Groq } from "groq-sdk"` not `import Groq from "..."`.
+- Groq API response structure: `message.choices[0].message.content` (not array of blocks like Anthropic).
+- Test had "github copilot" string but summary contained "github_copilot" (underscore). Fixed test to match actual tool ID.
+- `generateAISummary()` accepts `AuditResult` but audit engine returns `Omit<AuditResult, "id" | "createdAt" | "aiSummary">`. Updated type signature to accept the omitted type.
+- TypeScript strict mode: `any` types in test mocks flagged as errors. Rewrote with proper type casting using `Awaited<ReturnType<>>`.
+- Unused import: removed `motion` from SavingsHero (only `animate` is used).
+- Removed unused `ToolRecommendation` import from ai-summary.ts.
+
+**What I learned:**
+- Groq's response format differs from Anthropic. Need to check API docs carefully—response structure, available models, pricing, rate limits all vary.
+- Fallback logic is critical for reliability. Template summaries should be genuinely useful, not just "API failed" messages. The templated summary in this case is almost as valuable as the AI one.
+- User interviews reveal that founders have low-grade anxiety about not knowing if spend is optimized, even at $150/month. The tool's real value is "peace of mind" — not dollar savings. This reframes GTM messaging.
+- Type safety around API responses is worth the upfront cost. Strict TypeScript catches fallback/mocking bugs early.
+
+**Blockers / what I'm stuck on:**
+- None. Groq integration is solid, fallback is robust, tests are comprehensive.
+
+**Plan for tomorrow (Day 5):**
+- Build lead capture form with honeypot field
+- Implement POST /api/lead with Supabase storage + Resend email
+- Add share buttons for copying URL and social sharing
+- Write USER_INTERVIEWS.md, GTM.md, and ECONOMICS.md business docs
 - Proper mathematical separation of metrics is crucial for building trust with users and reviewers—combining plan savings with platform credits too early can inflate annual numbers deceptively.
 
 **Blockers / what I'm stuck on:**
