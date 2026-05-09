@@ -1,5 +1,6 @@
 
 import { runAuditEngine } from "@/lib/audit-engine";
+import { generateAISummary } from "@/lib/ai-summary";
 import { supabase } from "@/lib/supabase";
 import { AuditInput } from "@/types";
 import { NextRequest, NextResponse } from "next/server";
@@ -25,6 +26,9 @@ export async function POST(req: NextRequest) {
     // Run the audit engine
     const auditResults = runAuditEngine(auditInput);
 
+    // Generate AI summary (with fallback)
+    const aiSummary = await generateAISummary(auditResults);
+
     // Store full results in Supabase
     const { data, error } = await supabase
       .from("audits")
@@ -38,6 +42,7 @@ export async function POST(req: NextRequest) {
           total_annual_savings: auditResults.totalAnnualSavings,
           total_credex_savings: auditResults.totalCredexSavings,
           is_already_optimal: auditResults.isAlreadyOptimal,
+          ai_summary: aiSummary,
         },
       ])
       .select("id")
