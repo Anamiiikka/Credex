@@ -149,3 +149,46 @@ In larger companies, the problem isn't just plan-fitting, it's vendor consolidat
 
 **What This Changed About My Design:**
 The audit engine needs a more sophisticated cross-vendor analysis rule. It should be able to recognize that, for a "writing" use case, having both ChatGPT Teams and Claude Pro might be redundant. The recommendation should explicitly suggest consolidating to a single vendor to maximize savings and streamline billing.
+
+---
+
+## Synthesis & Key Patterns
+
+**Dates:** May 7–8, 2026  
+**Sample Size:** 5 interviews (2 founders, 1 manager, 1 employee, 1 student)  
+**Target Profiles Identified:**
+
+1. **Founders of 5–20 person startups** (Akash, Priya) — **Primary target**
+   - Spend $150–500/month on AI tools
+   - Zero cost visibility or process
+   - High anxiety about being uninformed
+   - Will use audit tool for "peace of mind" even with no savings
+
+2. **Product/Eng Managers in scale-ups** (David) — **Secondary target**
+   - Decentralized vendor jungle — multiple tools per use case
+   - Need consolidation data to make internal case
+   - Value: Audit report as negotiation tool with leadership
+
+3. **Employees/ICs** (Parth) — **Not a target**
+   - Don't control spend or see bills
+   - Tool must be designed for decision-makers, not users
+
+4. **Individual developers** (Friend) — **Out of scope for MVP**
+   - Cost-conscious but not budget-holding
+   - May be valuable for "freemium" expansion later
+
+**Core Insight:**
+The value prop is not "save money" — it's **"give me certainty."** Founders explicitly said they want the tool to confirm "you're optimized" as much as surface savings. Build trust first, capture spend second.
+
+**Design Decisions Validated:**
+- ✅ Large, visceral savings number on results page (Interview 1)
+- ✅ "Already Optimized" card equally prominent as recommendations (Interview 4)
+- ✅ Shareable URL for forwarding to decision-makers (Interview 2)
+- ✅ Cross-vendor consolidation rules in audit engine (Interview 5)
+- ✅ Positive, non-judgmental tone throughout (Interview 1)
+
+**Next Steps (for GTM.md & ECONOMICS.md):**
+- Focus ad spend and outreach on startup CTOs / founders
+- Message emphasis: "Know your AI tool spend" vs. "Save on AI tools"
+- Freemium model: Free audit + leads capture; credits upgrade for high-savings audits
+
