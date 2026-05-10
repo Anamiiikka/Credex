@@ -4,13 +4,7 @@ import { animate } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useInView } from "react-intersection-observer";
 
-interface CountUpProps {
-  end: number;
-  duration?: number;
-  decimals?: number;
-}
-
-function CountUp({ end, duration = 2, decimals = 0 }: CountUpProps) {
+function CountUp({ end, duration = 1.8 }: { end: number; duration?: number }) {
   const [count, setCount] = useState(0);
   const { ref, inView } = useInView({ triggerOnce: true });
 
@@ -19,19 +13,14 @@ function CountUp({ end, duration = 2, decimals = 0 }: CountUpProps) {
     const controls = animate(0, end, {
       duration,
       ease: "easeOut",
-      onUpdate(value: number) {
-        setCount(value);
-      },
+      onUpdate(v) { setCount(v); },
     });
     return () => controls.stop();
   }, [inView, end, duration]);
 
   return (
     <span ref={ref}>
-      {count.toLocaleString("en-US", {
-        minimumFractionDigits: decimals,
-        maximumFractionDigits: decimals,
-      })}
+      {count.toLocaleString("en-US", { maximumFractionDigits: 0 })}
     </span>
   );
 }
@@ -50,55 +39,62 @@ export default function SavingsHero({
   isAlreadyOptimal,
 }: SavingsHeroProps) {
   const effectiveSavings = totalMonthlySavings + totalCredexSavings;
+
   if (isAlreadyOptimal || effectiveSavings < 5) {
     return (
-      <section className="text-center my-12 space-y-3">
-        <div className="text-4xl">✅</div>
-        <h2 className="text-2xl font-bold text-slate-200">
+      <section className="text-center py-16 space-y-3">
+        <div className="text-5xl mb-4" aria-hidden="true">✅</div>
+        <h2 className="text-2xl font-bold text-slate-100">
           You&apos;re spending well.
         </h2>
-        <p className="text-slate-400">
-          Your current AI stack is optimized for your team size and use case.
+        <p className="text-slate-400 max-w-sm mx-auto leading-relaxed">
+          Your current AI stack is well-optimised for your team size and use case.
         </p>
       </section>
     );
   }
 
-  // When only Credex savings are available (no plan changes), show those as primary.
   const displayMonthly = totalMonthlySavings > 0 ? totalMonthlySavings : totalCredexSavings;
-  const savingsColor =
-    displayMonthly > 100 ? "text-emerald-400" : "text-amber-400";
+  const isLarge = displayMonthly >= 100;
 
   return (
-    <section className="text-center my-12 space-y-6">
+    <section className="text-center py-12 space-y-8">
+      {/* Big number */}
       <div className="space-y-2">
-        <p className="text-sm font-medium text-slate-400 uppercase tracking-widest">
-          Potential Monthly Savings
+        <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">
+          Potential monthly savings
         </p>
-        <div className={`text-6xl md:text-8xl font-bold tracking-tighter ${savingsColor}`}>
+
+        <div
+          className="text-[5rem] md:text-[7rem] font-bold tracking-tight leading-none
+                     bg-linear-to-r from-emerald-300 via-emerald-400 to-teal-300
+                     bg-clip-text text-transparent"
+          aria-label={`$${Math.round(displayMonthly)} per month`}
+        >
           $<CountUp end={displayMonthly} />
-          <span className="text-2xl font-medium text-slate-400">/mo</span>
+          <span className="text-3xl font-medium text-slate-500 align-baseline ml-1">/mo</span>
         </div>
-        <p className="text-slate-400 text-lg">
+
+        <p className={`text-sm ${isLarge ? "text-emerald-400/80" : "text-slate-500"}`}>
           Based on your provided tool stack and team size.
         </p>
       </div>
 
       {/* Annual + Credex breakdown */}
-      <div className="grid grid-cols-2 gap-4 max-w-sm mx-auto pt-4 border-t border-slate-700">
-        <div className="space-y-1">
-          <p className="text-2xl font-semibold text-slate-200 tabular-nums">
+      <div className="inline-grid grid-cols-2 divide-x divide-white/8 border border-white/8 rounded-xl overflow-hidden">
+        <div className="px-8 py-4 text-center">
+          <p className="text-2xl font-bold text-slate-100 tabular-nums">
             $<CountUp end={totalAnnualSavings} />
-            <span className="text-sm font-normal text-slate-400">/yr</span>
+            <span className="text-sm font-normal text-slate-500 ml-0.5">/yr</span>
           </p>
-          <p className="text-xs text-slate-400">Annual plan savings</p>
+          <p className="text-xs text-slate-500 mt-1">Annual plan savings</p>
         </div>
-        <div className="space-y-1">
-          <p className="text-2xl font-semibold text-emerald-400 tabular-nums">
+        <div className="px-8 py-4 text-center">
+          <p className="text-2xl font-bold text-emerald-400 tabular-nums">
             +$<CountUp end={totalCredexSavings} />
-            <span className="text-sm font-normal text-slate-400">/mo</span>
+            <span className="text-sm font-normal text-slate-500 ml-0.5">/mo</span>
           </p>
-          <p className="text-xs text-slate-400">Additional via Credex</p>
+          <p className="text-xs text-slate-500 mt-1">Via Credex credits</p>
         </div>
       </div>
     </section>

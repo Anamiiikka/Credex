@@ -1,98 +1,127 @@
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ToolRecommendation, RecommendationAction } from "@/types";
 import { ArrowRight, TrendingDown } from "lucide-react";
 
+/* ── Action metadata ─────────────────────────────────────────────────────── */
 const ACTION_COLOR: Record<RecommendationAction, string> = {
-  downgrade: "text-blue-400",
-  upgrade: "text-purple-400",
-  switch_vendor: "text-orange-400",
-  consolidate: "text-orange-400",
-  use_credex: "text-emerald-400",
-  keep_current: "text-slate-400",
+  downgrade:    "text-sky-400",
+  upgrade:      "text-violet-400",
+  switch_vendor:"text-amber-400",
+  consolidate:  "text-orange-400",
+  use_credex:   "text-emerald-400",
+  keep_current: "text-slate-500",
+};
+
+const ACTION_BADGE: Record<RecommendationAction, string> = {
+  downgrade:    "bg-sky-500/10    border-sky-500/20    text-sky-300",
+  upgrade:      "bg-violet-500/10 border-violet-500/20 text-violet-300",
+  switch_vendor:"bg-amber-500/10  border-amber-500/20  text-amber-300",
+  consolidate:  "bg-orange-500/10 border-orange-500/20 text-orange-300",
+  use_credex:   "bg-emerald-500/10 border-emerald-500/20 text-emerald-300",
+  keep_current: "bg-slate-500/10  border-slate-500/20  text-slate-400",
 };
 
 const ACTION_LABEL: Record<RecommendationAction, string> = {
-  downgrade: "Downgrade Plan",
-  upgrade: "Upgrade Plan",
-  switch_vendor: "Switch Vendor",
-  consolidate: "Consolidate",
-  use_credex: "Use Credex Credits",
-  keep_current: "Already Optimal",
+  downgrade:    "Downgrade plan",
+  upgrade:      "Upgrade to team plan",
+  switch_vendor:"Switch vendor",
+  consolidate:  "Consolidate",
+  use_credex:   "Use Credex credits",
+  keep_current: "Already optimal",
 };
 
-interface ToolCardProps {
+/* ── Per-tool colour token ───────────────────────────────────────────────── */
+const TOOL_COLORS: Record<string, string> = {
+  "ChatGPT":       "bg-emerald-500/15 text-emerald-300 ring-emerald-500/20",
+  "Claude":        "bg-orange-500/15  text-orange-300  ring-orange-500/20",
+  "Cursor":        "bg-blue-500/15    text-blue-300    ring-blue-500/20",
+  "GitHub Copilot":"bg-purple-500/15  text-purple-300  ring-purple-500/20",
+  "Windsurf":      "bg-cyan-500/15    text-cyan-300    ring-cyan-500/20",
+  "OpenAI API":    "bg-green-500/15   text-green-300   ring-green-500/20",
+  "Anthropic API": "bg-amber-500/15   text-amber-300   ring-amber-500/20",
+  "Gemini":        "bg-sky-500/15     text-sky-300     ring-sky-500/20",
+};
+
+interface Props {
   recommendation: ToolRecommendation;
 }
 
-function formatMoney(n: number) {
+function fmt(n: number) {
   return n.toLocaleString("en-US", { maximumFractionDigits: 0 });
 }
 
-export default function ToolCard({ recommendation }: ToolCardProps) {
-  const {
-    tool,
-    currentPlan,
-    recommendedPlan,
-    savings,
-    reason,
-    recommendedAction,
-    credexSavings,
-  } = recommendation;
+export default function ToolCard({ recommendation }: Props) {
+  const { tool, currentPlan, recommendedPlan, savings, reason, recommendedAction, credexSavings } = recommendation;
 
-  const actionColor = ACTION_COLOR[recommendedAction];
-  const actionLabel = ACTION_LABEL[recommendedAction];
+  const actionColor  = ACTION_COLOR[recommendedAction];
+  const actionBadge  = ACTION_BADGE[recommendedAction];
+  const actionLabel  = ACTION_LABEL[recommendedAction];
+  const toolColors   = TOOL_COLORS[tool] ?? "bg-slate-500/15 text-slate-300 ring-slate-500/20";
 
   return (
-    <Card className="bg-slate-800/50 border-slate-700 mb-4">
-      <CardHeader>
-        <CardTitle className="flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-slate-700 rounded-md" aria-hidden="true" />
-            <span className="text-xl font-bold text-slate-100">{tool}</span>
+    <div className="rounded-xl border border-white/8 bg-white/3 overflow-hidden">
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4 border-b border-white/6">
+        {/* Tool identity */}
+        <div className="flex items-center gap-3">
+          <div className={`h-8 w-8 rounded-lg ring-1 flex items-center justify-center text-sm font-bold shrink-0 ${toolColors}`}>
+            {tool[0]}
           </div>
-          <div className="flex items-center gap-2">
-            <span className={`text-sm font-medium ${actionColor}`}>
-              {actionLabel}
+          <span className="text-base font-semibold text-slate-100 tracking-tight">{tool}</span>
+        </div>
+
+        {/* Action badge + savings */}
+        <div className="flex items-center gap-2.5">
+          <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium ${actionBadge}`}>
+            {actionLabel}
+          </span>
+          {savings > 0 && (
+            <span className={`flex items-center gap-1 text-sm font-bold tabular-nums ${actionColor}`}>
+              <TrendingDown className="h-3.5 w-3.5" aria-hidden="true" />
+              ${fmt(savings)}/mo
             </span>
-            {savings > 0 && (
-              <div className={`flex items-center gap-1 ${actionColor}`}>
-                <TrendingDown size={18} />
-                <span className="text-lg font-bold">${formatMoney(savings)}/mo</span>
-              </div>
-            )}
-          </div>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] items-center gap-4 text-center">
-          <div className="p-4 bg-slate-900/70 rounded-lg">
-            <p className="text-sm text-slate-400">Current</p>
-            <p className="text-lg font-semibold text-slate-200">{currentPlan.name}</p>
-            <p className="text-2xl font-bold text-slate-100">${formatMoney(currentPlan.price)}/mo</p>
+          )}
+        </div>
+      </div>
+
+      {/* ── Plan comparison ── */}
+      <div className="px-5 py-4 space-y-4">
+        <div className="grid grid-cols-[1fr_32px_1fr] items-center gap-2">
+          {/* Current */}
+          <div className="rounded-lg bg-white/4 border border-white/6 p-3 text-center">
+            <p className="text-xs text-slate-500 mb-1">Current</p>
+            <p className="text-sm font-medium text-slate-300 leading-tight truncate">{currentPlan.name}</p>
+            <p className="text-xl font-bold text-slate-100 tabular-nums mt-0.5">${fmt(currentPlan.price)}<span className="text-xs font-normal text-slate-500">/mo</span></p>
           </div>
 
-          <div className="hidden md:block text-slate-500">
-            <ArrowRight size={32} className="mx-auto" />
+          {/* Arrow */}
+          <div className="flex justify-center">
+            <ArrowRight className="h-4 w-4 text-slate-600" aria-hidden="true" />
           </div>
 
-          <div className="p-4 bg-emerald-900/30 rounded-lg border border-emerald-700/50">
-            <p className="text-sm text-emerald-300">Recommended</p>
-            <p className="text-lg font-semibold text-slate-200">{recommendedPlan.name}</p>
-            <p className="text-2xl font-bold text-emerald-400">${formatMoney(recommendedPlan.price)}/mo</p>
+          {/* Recommended */}
+          <div className="rounded-lg bg-emerald-950/40 border border-emerald-700/30 p-3 text-center">
+            <p className="text-xs text-emerald-500 mb-1">Recommended</p>
+            <p className="text-sm font-medium text-slate-300 leading-tight truncate">{recommendedPlan.name}</p>
+            <p className="text-xl font-bold text-emerald-400 tabular-nums mt-0.5">${fmt(recommendedPlan.price)}<span className="text-xs font-normal text-emerald-600">/mo</span></p>
           </div>
         </div>
 
-        <p className="text-slate-300 text-center md:text-left">
-          <span className="font-semibold">Why: </span>{reason}
+        {/* Reason */}
+        <p className="text-sm text-slate-400 leading-relaxed">
+          <span className="font-medium text-slate-300">Why: </span>
+          {reason}
         </p>
 
-        {credexSavings && credexSavings > 5 && (
-          <div className="rounded-lg bg-emerald-900/20 border border-emerald-700/30 px-3 py-2 text-xs text-emerald-400">
-            ⚡ Save an additional ${formatMoney(credexSavings)}/mo by purchasing through Credex credits
+        {/* Credex callout */}
+        {credexSavings !== undefined && credexSavings > 5 && (
+          <div className="flex items-center gap-2 rounded-lg border border-emerald-700/25 bg-emerald-950/30 px-3 py-2">
+            <span className="text-emerald-400 text-xs" aria-hidden="true">⚡</span>
+            <p className="text-xs text-emerald-400">
+              Save an extra <span className="font-semibold">${fmt(credexSavings)}/mo</span> by purchasing through Credex credits
+            </p>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
