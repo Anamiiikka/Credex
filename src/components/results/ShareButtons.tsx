@@ -14,6 +14,7 @@ export default function ShareButtons({ auditId, monthlySavings }: ShareButtonsPr
   const [origin, setOrigin] = useState("https://credex.rocks");
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setOrigin(window.location.origin);
   }, []);
 
