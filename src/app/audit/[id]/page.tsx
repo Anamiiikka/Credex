@@ -5,6 +5,8 @@ import { Metadata } from "next";
 import SavingsHero from "@/components/results/SavingsHero";
 import ToolCard from "@/components/results/ToolCard";
 import CredexCTA from "@/components/results/CredexCTA";
+import LeadCaptureForm from "@/components/results/LeadCaptureForm";
+import ShareButtons from "@/components/results/ShareButtons";
 import { AuditResult, ToolRecommendation } from "@/types";
 
 interface Props {
@@ -115,7 +117,20 @@ export default async function AuditResultPage({ params }: Props) {
           isHighSavings={auditResult.isHighSavings}
           isAlreadyOptimal={auditResult.isAlreadyOptimal}
         />
+
+        {/* Share buttons — shown after results, never before */}
+        <ShareButtons
+          auditId={params.id}
+          monthlySavings={auditResult.totalMonthlySavings}
+        />
+
+        {/* Lead capture form — shown after results, never before */}
+        <LeadCaptureForm
+          auditId={params.id}
+          monthlySavings={auditResult.totalMonthlySavings}
+        />
       </div>
     </main>
   );
 }
+
