@@ -157,13 +157,80 @@
 - Build lead capture form with honeypot field
 - Implement POST /api/lead with Supabase storage + Resend email
 - Add share buttons for copying URL and social sharing
-- Write USER_INTERVIEWS.md, GTM.md, and ECONOMICS.md business docs
+- Write USER_INTERVIEWS.md (already done Day 4), GTM.md business docs
 - Proper mathematical separation of metrics is crucial for building trust with users and reviewers—combining plan savings with platform credits too early can inflate annual numbers deceptively.
 
-**Blockers / what I'm stuck on:**
-- None. The audit engine math is now rock-solid and the form UI is robust.
+## Day 5 — 2026-05-10
 
-**Plan for tomorrow (Day 3):**
-- Build the UI to display the audit results (Results Dashboard).
-- Implement the AI Summary generation using Anthropic API.
-- Set up Supabase Lead Capture.
+**Hours worked:** ~3
+
+**What I built:**
+
+### Commit 1 — `feat: build lead capture form with honeypot abuse protection`
+- `LeadCaptureForm` — two-state (collapsed CTA → expanded form) with framer-motion
+  height animation. Shown **only on the audit results page**, never before.
+- `HoneypotField` — visually and semantically hidden input; bots fill it, humans
+  never see it. Inline inside LeadCaptureForm so it can't be imported separately
+  and accidentally shown outside the results context.
+- Form fields: work email (required), company (optional), role (optional).
+- Success state renders a `<CheckCircle2>` confirmation, replaces the form entirely.
+
+### Commit 2 — `feat: implement POST /api/lead with Supabase storage and Resend email`
+- `/api/lead` route validates honeypot (silent 200 on bot hit), regex-validates email,
+  checks auditId present, verifies audit exists in Supabase.
+- Upserts to `leads` table with `onConflict: "email,audit_id"` — idempotent.
+- Sends HTML confirmation email via Resend API (plain fetch, no SDK dependency).
+  Email is fire-and-forget — failure is logged but never surfaces a 500 to the user.
+- Email body: savings-aware subject line + branded dark-mode HTML template.
+
+### Commit 3 — `test: add lead capture and API validation tests`
+- `lead-capture.test.ts` — 6 test groups, 22 test cases total:
+  - **Honeypot detection** (5 cases): empty, whitespace-only, URL, undefined, bot string
+  - **Email validation** (9 cases): valid formats, missing @, no TLD, spaces, trim
+  - **LeadInput contract** (4 cases): required fields, optional fields, undefined honeypot, PII sanitisation
+  - **Handler guard logic** (6 cases): bot silent-200, invalid email 400, missing auditId 400, clean pass 201
+  - **Mock sanity** (2 cases): vi.fn() and async mock verification
+
+### Commit 4 — `feat: add share buttons for copying link and social sharing`
+- `ShareButtons` — copy-to-clipboard with animated ✓ check (framer-motion AnimatePresence),
+  Twitter/X intent URL with savings-aware share text, LinkedIn share URL.
+- Uses `window.location.origin` for correct URL on all environments; falls back to
+  `credex.rocks` for SSR.
+- Added to `audit/[id]/page.tsx` above the lead form — both shown only post-results.
+
+### Commit 5 — `docs: write USER_INTERVIEWS.md and GTM.md`
+- `USER_INTERVIEWS.md` — already expanded with 5 interviews and synthesis in Day 4.
+  No changes needed; already meets spec.
+- `GTM.md` — 8-section go-to-market plan (350 words) covering:
+  - Primary/secondary target segments with emotional drivers
+  - 5 distribution channels ranked by priority (LinkedIn → HN → outreach)
+  - Messaging framework table per audience
+  - Lead funnel ASCII diagram
+  - Day-14 launch metrics with concrete targets
+  - Risk/mitigation table
+
+**Bugs I hit and fixed:**
+- `lucide-react` `Twitter` icon doesn't exist in v1.x — replaced with raw SVG
+  of the X logo (the one Twitter rebranded to). The `Twitter` named export was
+  removed in lucide-react after the rebrand.
+- Resend `from` field requires a domain that's verified in Resend dashboard.
+  Using `noreply@credex.rocks` in code — will need domain verification before
+  production deploy (non-blocking for MVP).
+
+**What I learned:**
+- Honeypot fields should silently succeed (return 200), not return 400.
+  If you return 400 for honeypot hits, bots learn they've been detected and
+  can adapt. Silent acceptance also prevents timing analysis.
+- Resend's free tier only allows sending to verified addresses in development.
+  For production, you need a verified domain. The `from` address determines
+  which domain needs verification — worth setting this up early.
+- `onConflict` upsert in Supabase requires the conflicting columns to have a
+  unique constraint defined at the DB level. Need to add `UNIQUE(email, audit_id)`
+  to the `leads` table if not already present.
+
+**Plan for tomorrow (Day 6):**
+- Set up the `leads` table in Supabase with correct schema and unique constraint
+- Build `/admin` or internal dashboard to view captured leads (optional stretch)
+- Write `ECONOMICS.md` pricing model and unit economics
+- Final polish: loading states, error boundaries, responsive audit page
+
