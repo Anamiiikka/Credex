@@ -8,6 +8,7 @@ import { LeadInput } from "@/types";
 async function sendConfirmationEmail(
   email: string,
   monthlySavings: number,
+  credexSavings: number,
   auditId: string
 ): Promise<void> {
   const apiKey = process.env.RESEND_API_KEY;
@@ -16,10 +17,11 @@ async function sendConfirmationEmail(
     return;
   }
 
+  const effectiveSavings = monthlySavings + credexSavings;
   const savingsLine =
-    monthlySavings > 0
-      ? `<p>Your audit found <strong>$${Math.round(monthlySavings)}/month</strong> in potential savings.</p>`
-      : `<p>Your AI stack is looking well-optimised.</p>`;
+    effectiveSavings > 0
+      ? `<p>Your audit found <strong>$${Math.round(monthlySavings)}/month</strong> in plan savings${credexSavings > 0 ? ` plus an additional <strong>$${Math.round(credexSavings)}/month</strong> via Credex credits` : ""}.</p>`
+      : `<p>Your AI stack is looking well-optimised — no major changes needed right now.</p>`;
 
   const html = `
 <!DOCTYPE html>
@@ -78,8 +80,8 @@ async function sendConfirmationEmail(
       from: "Credex Auditor <noreply@credex.rocks>",
       to: [email],
       subject:
-        monthlySavings > 0
-          ? `Your AI audit: $${Math.round(monthlySavings)}/mo in savings found`
+        effectiveSavings > 0
+          ? `Your AI audit: $${Math.round(effectiveSavings)}/mo in savings found`
           : "Your AI spend audit results",
       html,
     }),
@@ -123,7 +125,7 @@ export async function POST(req: NextRequest) {
     // ── Verify the audit exists ──
     const { data: audit, error: auditErr } = await supabase
       .from("audits")
-      .select("id, total_monthly_savings")
+      .select("id, total_monthly_savings, total_credex_savings")
       .eq("id", body.auditId)
       .single();
 
@@ -158,7 +160,8 @@ export async function POST(req: NextRequest) {
 
     // ── Send confirmation email (fire-and-forget; failures are non-fatal) ──
     const monthlySavings: number = audit.total_monthly_savings ?? 0;
-    sendConfirmationEmail(email, monthlySavings, body.auditId).catch((err) =>
+    const credexSavings: number = audit.total_credex_savings ?? 0;
+    sendConfirmationEmail(email, monthlySavings, credexSavings, body.auditId).catch((err) =>
       console.error("Email send error:", err)
     );
 

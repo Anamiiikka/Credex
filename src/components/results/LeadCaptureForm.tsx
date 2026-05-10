@@ -29,8 +29,8 @@ function HoneypotField({
         height: "1px",
         overflow: "hidden",
         opacity: 0,
-        tabIndex: -1,
       }}
+      tabIndex={-1}
     >
       {/* Do not fill out this field */}
       <label htmlFor="lead_website">Website</label>
@@ -62,7 +62,7 @@ export default function LeadCaptureForm({
 
   const handleExpand = () => setFormState("expanded");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!email.trim()) {
       setErrorMsg("Email is required.");

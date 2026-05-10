@@ -13,7 +13,6 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
-// Dynamic OG tags per audit
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
   const { data } = await supabase
@@ -22,43 +21,27 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     .eq("id", id)
     .single();
 
-  const savings = data?.total_monthly_savings ?? 0;
-  const annualSavings = data?.total_annual_savings ?? 0;
-  const savingsAmount = Math.round(savings);
-  const annualAmount = Math.round(annualSavings);
+  const monthly = Math.round(data?.total_monthly_savings ?? 0);
+  const annual = Math.round(data?.total_annual_savings ?? 0);
 
-  const title = savingsAmount > 0
-    ? `Save $${savingsAmount}/mo on AI tools`
-    : "Your AI Spend Audit Results";
-
-  const description = savingsAmount > 0
-    ? `Found $${annualAmount}/year in AI tool savings. Audit yours free.`
-    : "See where your team can optimize AI tool spend.";
+  const title = monthly > 0 ? `Save $${monthly}/mo on AI tools` : "Your AI Spend Audit";
+  const description = monthly > 0
+    ? `Found $${annual}/year in AI tool savings. Audit yours free.`
+    : "See where your team can optimise AI tool spend.";
 
   return {
     title,
     description,
     openGraph: {
-      title: savingsAmount > 0
-        ? `Save $${savingsAmount}/mo on AI tools 🚀`
-        : "My AI Spend Audit Results",
+      title: monthly > 0 ? `Save $${monthly}/mo on AI tools 🚀` : "My AI Spend Audit",
       description: "Free AI spend audit at credex.rocks",
       type: "website",
       url: `https://credex.rocks/audit/${id}`,
-      images: [
-        {
-          url: "https://credex.rocks/og-image.png",
-          width: 1200,
-          height: 630,
-          alt: "AI Spend Audit Results",
-        },
-      ],
+      images: [{ url: "https://credex.rocks/og-image.png", width: 1200, height: 630, alt: "AI Spend Audit Results" }],
     },
     twitter: {
       card: "summary_large_image",
-      title: savingsAmount > 0
-        ? `I could save $${savingsAmount}/mo on AI tools`
-        : "My AI Spend Audit",
+      title: monthly > 0 ? `I could save $${monthly}/mo on AI tools` : "My AI Spend Audit",
       description,
     },
   };
@@ -78,15 +61,17 @@ export default async function AuditResultPage({ params }: Props) {
   const recommendations: ToolRecommendation[] = auditResult.recommendations;
 
   return (
-    <main className="flex min-h-screen flex-col items-center p-4 md:p-12 lg:p-24">
-      <div className="w-full max-w-4xl">
-        {/* Audit context — PII stripped (no email/company shown) */}
-        <p className="text-center text-sm text-slate-400 mb-6">
+    <main className="flex min-h-screen flex-col items-center px-4 py-12 md:py-16">
+      <div className="w-full max-w-3xl">
+
+        {/* Context bar */}
+        <p className="text-center text-xs text-slate-500 mb-8 tracking-wide">
           {data.tools.length} tool{data.tools.length !== 1 ? "s" : ""} audited
           &nbsp;·&nbsp; Team of {data.team_size}
           &nbsp;·&nbsp; {data.use_case} use case
         </p>
 
+        {/* Savings headline */}
         <SavingsHero
           totalMonthlySavings={auditResult.totalMonthlySavings}
           totalAnnualSavings={auditResult.totalAnnualSavings}
@@ -94,45 +79,54 @@ export default async function AuditResultPage({ params }: Props) {
           isAlreadyOptimal={auditResult.isAlreadyOptimal}
         />
 
-        <div className="mt-12">
-          <h2 className="text-2xl font-bold text-slate-200 mb-4">
-            Recommendations
-          </h2>
-          {recommendations.map((rec, i) => (
-            <ToolCard
-              key={`${rec.tool}-${rec.recommendedAction}-${i}`}
-              recommendation={rec}
-            />
-          ))}
-        </div>
+        {/* Recommendation cards */}
+        {recommendations.length > 0 && (
+          <section className="mt-12">
+            <h2 className="text-lg font-semibold text-slate-200 mb-4">
+              Recommendations
+            </h2>
+            <div className="space-y-4">
+              {recommendations.map((rec, i) => (
+                <ToolCard
+                  key={`${rec.tool}-${rec.recommendedAction}-${i}`}
+                  recommendation={rec}
+                />
+              ))}
+            </div>
+          </section>
+        )}
 
-        {/* AI summary if available */}
+        {/* AI analysis */}
         {data.ai_summary && (
-          <div className="mt-8 p-4 bg-slate-800/50 border border-slate-700 rounded-lg">
-            <p className="text-sm font-medium text-slate-400 mb-2">AI Analysis</p>
-            <p className="text-slate-300 text-sm leading-relaxed">{data.ai_summary}</p>
+          <div className="mt-8 rounded-xl border border-slate-700/60 bg-slate-800/40 px-5 py-4">
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 mb-2">
+              AI analysis
+            </p>
+            <p className="text-sm text-slate-300 leading-relaxed">{data.ai_summary}</p>
           </div>
         )}
 
+        {/* Credex CTA */}
         <CredexCTA
           totalMonthlySavings={auditResult.totalMonthlySavings}
+          totalCredexSavings={auditResult.totalCredexSavings}
           isHighSavings={auditResult.isHighSavings}
           isAlreadyOptimal={auditResult.isAlreadyOptimal}
         />
 
-        {/* Share buttons — shown after results, never before */}
-        <ShareButtons
-          auditId={id}
-          monthlySavings={auditResult.totalMonthlySavings}
-        />
+        {/* Share + lead capture */}
+        <div className="mt-10 space-y-4">
+          <ShareButtons
+            auditId={id}
+            monthlySavings={auditResult.totalMonthlySavings}
+          />
+          <LeadCaptureForm
+            auditId={id}
+            monthlySavings={auditResult.totalMonthlySavings}
+          />
+        </div>
 
-        {/* Lead capture form — shown after results, never before */}
-        <LeadCaptureForm
-          auditId={id}
-          monthlySavings={auditResult.totalMonthlySavings}
-        />
       </div>
     </main>
   );
 }
-

@@ -1,117 +1,114 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
-import { ArrowRight, PartyPopper, Rocket, Zap } from "lucide-react";
+import { ArrowRight, Sparkles, Zap } from "lucide-react";
+
+const CREDEX_SIGNUP_URL = "https://credex.rocks/get-started";
 
 interface CredexCTAProps {
   totalMonthlySavings: number;
+  totalCredexSavings: number;
   isHighSavings: boolean;
   isAlreadyOptimal: boolean;
 }
 
 export default function CredexCTA({
   totalMonthlySavings,
+  totalCredexSavings,
   isHighSavings,
   isAlreadyOptimal,
 }: CredexCTAProps) {
-  // Already optimal — honest "you're doing well" message
-  if (isAlreadyOptimal || totalMonthlySavings < 100) {
-    return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-        className="mt-12 text-center"
-      >
-        <Card className="bg-slate-800/50 border-slate-700 max-w-2xl mx-auto">
-          <CardHeader>
-            <CardTitle className="flex items-center justify-center gap-3">
-              <PartyPopper className="text-amber-400" />
-              <span className="text-xl font-bold text-slate-100">
-                You&apos;re Spending Wisely!
-              </span>
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-slate-300">
-              Your AI tool spend is already well-optimized. We couldn&apos;t
-              find any significant savings for you at this time. Great job!
-            </p>
-            <Button variant="outline" className="gap-2">
-              <Zap size={16} />
-              Notify Me When Better Options Appear
-            </Button>
-          </CardContent>
-        </Card>
-      </motion.div>
-    );
-  }
+  const effectiveSavings = totalMonthlySavings + totalCredexSavings;
 
-  // High savings (>$500) — strong CTA
+  // Truly nothing to surface — don't render
+  if (effectiveSavings < 5) return null;
+
+  // ── High savings (≥ $500) — prominent gradient CTA ────────────────────────
   if (isHighSavings) {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
+        transition={{ delay: 0.4 }}
         className="mt-12"
       >
-        <Card className="bg-gradient-to-br from-purple-600/20 via-slate-800/50 to-slate-800/50 border-purple-500/50">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-3 text-2xl font-bold text-slate-50">
-              <Rocket className="text-purple-400" />
-              Ready to Supercharge Your Savings?
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <p className="text-slate-300 text-lg">
-              You have significant savings potential! Credex can help you
-              realize these savings by providing discounted access to top AI
-              tools and credits.
-            </p>
-            <Button
-              size="lg"
-              className="bg-purple-600 hover:bg-purple-700 text-white font-bold gap-2"
+        <div className="relative overflow-hidden rounded-2xl border border-purple-500/40 bg-linear-to-br from-purple-600/20 via-slate-800/60 to-indigo-900/20 p-8">
+          {/* Glow accent */}
+          <div className="pointer-events-none absolute -right-12 -top-12 h-48 w-48 rounded-full bg-purple-500/10 blur-3xl" />
+
+          <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5 text-purple-400" aria-hidden="true" />
+                <span className="text-sm font-semibold uppercase tracking-widest text-purple-400">
+                  Big savings available
+                </span>
+              </div>
+              <h3 className="text-2xl font-bold text-slate-50">
+                Save up to{" "}
+                <span className="text-purple-300">
+                  ${Math.round(effectiveSavings).toLocaleString("en-US")}
+                </span>
+                /mo with Credex
+              </h3>
+              <p className="max-w-md text-sm leading-relaxed text-slate-400">
+                Credex lets you buy pre-paid AI credits at a 20% discount by pooling
+                unused capacity from other companies. Apply the savings on top of any
+                plan optimizations above.
+              </p>
+            </div>
+
+            <a
+              href={CREDEX_SIGNUP_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex shrink-0 items-center gap-2 rounded-xl bg-purple-600 px-6 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-purple-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-purple-400"
             >
-              Connect with Credex
-              <ArrowRight size={18} />
-            </Button>
-          </CardContent>
-        </Card>
+              Get started free
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            </a>
+          </div>
+        </div>
       </motion.div>
     );
   }
 
-  // Mid-range savings ($100–$500) — softer CTA
+  // ── Mid-range or Credex-only savings ($5–$499) — softer CTA ──────────────
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.5 }}
+      transition={{ delay: 0.4 }}
       className="mt-12"
     >
-      <Card className="bg-gradient-to-br from-emerald-600/10 via-slate-800/50 to-slate-800/50 border-emerald-500/30">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-3 text-xl font-bold text-slate-50">
-            <Zap className="text-emerald-400" />
-            Unlock Your ${totalMonthlySavings.toLocaleString("en-US", { maximumFractionDigits: 0 })}/mo in Savings
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <p className="text-slate-300">
-            Credex provides discounted AI tool credits from companies that
-            overforecast. Apply these savings on top of the plan optimizations
-            above.
-          </p>
-          <Button
-            variant="outline"
-            className="border-emerald-500/50 text-emerald-400 hover:bg-emerald-500/10 gap-2"
+      <Card className="border-emerald-700/30 bg-emerald-950/20">
+        <CardContent className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <Zap className="h-4 w-4 text-emerald-400" aria-hidden="true" />
+              <span className="text-sm font-semibold text-emerald-400">
+                {isAlreadyOptimal
+                  ? "One more unlock available"
+                  : `$${Math.round(effectiveSavings).toLocaleString("en-US")}/mo more with Credex`}
+              </span>
+            </div>
+            <p className="text-sm text-slate-400">
+              {totalCredexSavings > 0
+                ? `Credex credits give you a flat 20% discount on AI tool billing — $${Math.round(totalCredexSavings)}/mo on top of the plan changes above.`
+                : "Credex provides discounted AI credits from companies with unused capacity — stack the savings on top of the plan changes above."}
+            </p>
+          </div>
+
+          <a
+            href={CREDEX_SIGNUP_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-emerald-600/50 px-5 py-2.5 text-sm font-medium text-emerald-400 transition hover:border-emerald-500 hover:bg-emerald-500/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
           >
-            Learn How Credex Works
-            <ArrowRight size={18} />
-          </Button>
+            Learn how Credex works
+            <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+          </a>
         </CardContent>
       </Card>
     </motion.div>

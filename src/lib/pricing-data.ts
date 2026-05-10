@@ -491,7 +491,11 @@ export function getPlan(
   return PRICING_DATA[toolId].plans.find((p) => p.id === planId);
 }
 
-/** Calculate monthly cost for a tool entry */
+/** Calculate total monthly cost for a given tool, plan, and number of seats.
+ *  Always returns price × seats — individual plans (isPerSeat=false) are still
+ *  one subscription per user, so total company cost is seats × unit price.
+ *  PAYG and free plans have monthlyPricePerSeat=0, so they correctly return 0.
+ */
 export function calculateMonthlyCost(
   toolId: ToolName,
   planId: string,
@@ -499,13 +503,7 @@ export function calculateMonthlyCost(
 ): number {
   const plan = getPlan(toolId, planId);
   if (!plan) return 0;
-
-  // For pay-as-you-go plans, the user enters their own spend
-  if (plan.monthlyPricePerSeat === 0 && planId.includes("payg")) {
-    return 0; // User will input manually
-  }
-
-  return plan.isPerSeat ? plan.monthlyPricePerSeat * seats : plan.monthlyPricePerSeat;
+  return plan.monthlyPricePerSeat * seats;
 }
 
 /**

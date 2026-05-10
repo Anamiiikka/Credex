@@ -49,7 +49,8 @@ export default function SavingsHero({
   totalCredexSavings,
   isAlreadyOptimal,
 }: SavingsHeroProps) {
-  if (isAlreadyOptimal || totalMonthlySavings === 0) {
+  const effectiveSavings = totalMonthlySavings + totalCredexSavings;
+  if (isAlreadyOptimal || effectiveSavings < 5) {
     return (
       <section className="text-center my-12 space-y-3">
         <div className="text-4xl">✅</div>
@@ -63,8 +64,10 @@ export default function SavingsHero({
     );
   }
 
+  // When only Credex savings are available (no plan changes), show those as primary.
+  const displayMonthly = totalMonthlySavings > 0 ? totalMonthlySavings : totalCredexSavings;
   const savingsColor =
-    totalMonthlySavings > 100 ? "text-emerald-400" : "text-amber-400";
+    displayMonthly > 100 ? "text-emerald-400" : "text-amber-400";
 
   return (
     <section className="text-center my-12 space-y-6">
@@ -73,7 +76,7 @@ export default function SavingsHero({
           Potential Monthly Savings
         </p>
         <div className={`text-6xl md:text-8xl font-bold tracking-tighter ${savingsColor}`}>
-          $<CountUp end={totalMonthlySavings} />
+          $<CountUp end={displayMonthly} />
           <span className="text-2xl font-medium text-slate-400">/mo</span>
         </div>
         <p className="text-slate-400 text-lg">

@@ -22,8 +22,21 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      - name: Type check
+        run: npx tsc --noEmit
+
       - name: Run linter
         run: npm run lint
 
       - name: Run tests
         run: npm test
+
+      - name: Build
+        run: npm run build
+        env:
+          # Stub env vars so Next.js build does not fail on missing secrets.
+          # Real values are only needed at runtime, not build time.
+          NEXT_PUBLIC_SUPABASE_URL: https://placeholder.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: placeholder-anon-key
+          GROQ_API_KEY: placeholder-groq-key
+          RESEND_API_KEY: placeholder-resend-key

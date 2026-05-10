@@ -10,6 +10,7 @@ import {
   getToolDisplayName,
   getPlan,
   getPlansForTool,
+  calculateMonthlyCost,
   CREDEX_DISCOUNT_RATE,
   SAVINGS_THRESHOLDS
 } from "./pricing-data";
@@ -25,161 +26,169 @@ const TOOL_CATEGORIES: Record<ToolName, "chat" | "coding" | "api"> = {
   anthropic_api: "api"
 };
 
+interface InternalRecommendation {
+  toolEntry: ToolEntry;
+  currentToolName: string;
+  currentPlanName: string;
+  currentMonthlyCost: number;
+  recommendedAction: RecommendationAction;
+  recommendedToolName?: string;
+  recommendedPlanName?: string;
+  newMonthlyCost: number;
+  monthlySavings: number;
+  credexSavings: number;
+  reason: string;
+}
+
 export function runAuditEngine(input: AuditInput): Omit<AuditResult, "id" | "createdAt" | "aiSummary"> {
   let totalCurrentSpend = 0;
   let totalOptimizedSpend = 0;
   let totalMonthlySavings = 0;
-  let totalAnnualSavings = 0;
 
-  // Temporary type for internal recommendations (before transformation)
-  interface InternalRecommendation {
-    toolEntry: ToolEntry;
-    currentToolName: string;
-    currentPlanName: string;
-    currentMonthlyCost: number;
-    recommendedAction: RecommendationAction;
-    recommendedToolName?: string;
-    recommendedPlanName?: string;
-    newMonthlyCost: number;
-    monthlySavings: number;
-    credexSavings: number;
-    reason: string;
+  const internalRecs: InternalRecommendation[] = [];
+
+  // Group tools by category to detect overlaps
+  const toolsByCategory: Record<string, ToolEntry[]> = { chat: [], coding: [], api: [] };
+
+  for (const entry of input.tools) {
+    const category = TOOL_CATEGORIES[entry.toolId];
+    if (category) toolsByCategory[category].push(entry);
+    totalCurrentSpend += entry.monthlySpend;
   }
 
-  const recommendations: InternalRecommendation[] = [];
-
-  // Group tools by category to find overlaps
-  const toolsByCategory: Record<string, ToolEntry[]> = { chat: [], coding: [], api: [] };
-  
-  input.tools.forEach(entry => {
-    const category = TOOL_CATEGORIES[entry.toolId];
-    toolsByCategory[category].push(entry);
-    totalCurrentSpend += entry.monthlySpend;
-  });
-
-  input.tools.forEach(entry => {
+  for (const entry of input.tools) {
     const plan = getPlan(entry.toolId, entry.planId);
-    if (!plan) return;
+    if (!plan) continue;
 
     const currentCost = entry.monthlySpend;
     const currentToolName = getToolDisplayName(entry.toolId);
-    
+    const category = TOOL_CATEGORIES[entry.toolId];
+    const siblings = toolsByCategory[category] ?? [];
+
     let recommendedAction: RecommendationAction = "keep_current";
     let newMonthlyCost = currentCost;
-    let recommendedPlanName: string | undefined = undefined;
-    let recommendedToolNameStr: string | undefined = undefined;
+    let recommendedPlanName: string | undefined;
+    let recommendedToolName: string | undefined;
     let reason = "Optimal plan for your current usage.";
 
-    const category = TOOL_CATEGORIES[entry.toolId];
-    const siblings = toolsByCategory[category];
-
-    // 1. Cross-Vendor Consolidations
-    // If multiple tools in the same category, recommend dropping the more expensive one or consolidating
+    // ── 1. Cross-vendor consolidation ────────────────────────────────────────
+    // If the team uses multiple tools in the same category, drop the lower-cost
+    // one and fully consolidate onto the primary (highest-spend) tool.
+    // API tools are excluded — redundant API usage is tracked separately.
     if (siblings.length > 1 && category !== "api") {
-      // Find if there's a cheaper or "primary" tool in this category we should keep
-      // For simplicity, keep the one with the highest spend as "primary" and recommend dropping this one if it's not primary
       const primaryTool = [...siblings].sort((a, b) => b.monthlySpend - a.monthlySpend)[0];
-      
+
       if (primaryTool.id !== entry.id) {
         recommendedAction = "consolidate";
-        // Conservative 50% estimate — user may keep some usage or migrate gradually.
-        // Actual savings depend on migration completeness.
-        newMonthlyCost = currentCost * 0.5; // Estimate partial savings
-        recommendedToolNameStr = getToolDisplayName(primaryTool.toolId);
-        
+        newMonthlyCost = 0; // cancel this subscription entirely
+        recommendedPlanName = "Cancel subscription";
+        recommendedToolName = getToolDisplayName(primaryTool.toolId);
+
         if (primaryTool.toolId === entry.toolId) {
-          reason = `You have multiple ${currentToolName} subscriptions. Consider consolidating into a single Team or Enterprise plan for better management.`;
+          reason = `You have multiple ${currentToolName} subscriptions. Consolidate into a single Team or Enterprise plan to eliminate duplicate spend.`;
         } else {
-          reason = `You're paying for multiple ${category} tools. Consider consolidating into ${recommendedToolNameStr} — estimated 50% savings on this subscription.`;
+          reason = `Your team is paying for both ${currentToolName} and ${recommendedToolName}. Cancel ${currentToolName} and fully consolidate onto ${recommendedToolName}.`;
         }
       }
     }
 
-    // 2. Same-Vendor Plan Fit (if not already dropping it)
+    // ── 2. Same-vendor plan-fit ───────────────────────────────────────────────
+    // Only runs if we're not already recommending consolidation.
     if (recommendedAction === "keep_current") {
       const allPlans = getPlansForTool(entry.toolId);
-      
-      // Look for a plan that is better suited
-      // Case A: Paying for too many minSeats
+
+      // Case A: team is below the plan's minimum seat requirement — overpaying.
       if (plan.minSeats && entry.seats < plan.minSeats) {
-        // Find a cheaper per-seat or flat plan
         const betterPlans = allPlans.filter(p => {
-          const cost = p.monthlyPricePerSeat === 0 && p.id.includes("payg") 
-            ? currentCost 
-            : p.monthlyPricePerSeat * entry.seats;
-          return cost < currentCost && (!p.minSeats || entry.seats >= p.minSeats) && p.monthlyPricePerSeat > 0;
+          if (p.monthlyPricePerSeat === 0) return false; // skip free/payg plans
+          const cost = calculateMonthlyCost(entry.toolId, p.id, entry.seats);
+          return cost < currentCost && (!p.minSeats || entry.seats >= p.minSeats);
         });
 
         if (betterPlans.length > 0) {
-          const bestPlan = betterPlans.sort((a, b) => {
-            const costA = a.monthlyPricePerSeat * entry.seats;
-            const costB = b.monthlyPricePerSeat * entry.seats;
-            return costA - costB;
-          })[0];
-          
+          const bestPlan = betterPlans.sort((a, b) =>
+            calculateMonthlyCost(entry.toolId, a.id, entry.seats) -
+            calculateMonthlyCost(entry.toolId, b.id, entry.seats)
+          )[0];
+
+          newMonthlyCost = calculateMonthlyCost(entry.toolId, bestPlan.id, entry.seats);
           recommendedAction = "downgrade";
-          newMonthlyCost = bestPlan.monthlyPricePerSeat * entry.seats;
           recommendedPlanName = bestPlan.name;
-          reason = `Your team size (${entry.seats}) is below the minimum required (${plan.minSeats}) for ${plan.name}. Switching to ${bestPlan.name} saves money.`;
+          reason = `Your team (${entry.seats} seats) is below the minimum required for ${plan.name} (${plan.minSeats} seats). Switching to ${bestPlan.name} saves $${Math.round(currentCost - newMonthlyCost)}/mo.`;
         }
-      } 
-      // Case B: Should upgrade to Teams for better management if cost is similar or if they have many seats
+      }
+
+      // Case B: team-sized group on individual plans — a Teams plan may be cheaper
+      // or provide meaningful management benefits at the same cost.
       else if (!plan.id.includes("free") && entry.seats > 3) {
-        // Find a Teams plan
         const teamsPlan = allPlans.find(p => p.minSeats && p.minSeats <= entry.seats);
         if (teamsPlan) {
-          const cost = teamsPlan.monthlyPricePerSeat * entry.seats;
-          // Even if slightly more expensive, recommend upgrade if cost is manageable
-          if (cost <= currentCost) { // Only if same cost or cheaper
+          const cost = calculateMonthlyCost(entry.toolId, teamsPlan.id, entry.seats);
+          if (cost <= currentCost) {
             recommendedAction = "upgrade";
             newMonthlyCost = cost;
             recommendedPlanName = teamsPlan.name;
-            reason = `With ${entry.seats} users, upgrading to ${teamsPlan.name} provides centralized billing and admin controls.`;
+            reason = `With ${entry.seats} users, ${teamsPlan.name} ($${Math.round(cost)}/mo) provides centralized billing and admin controls at the same or lower cost.`;
           }
         }
       }
     }
 
-    // Calculate credex savings on the new optimized cost
-    const credexSavings = newMonthlyCost * CREDEX_DISCOUNT_RATE;
+    // ── 3. Credex discount ────────────────────────────────────────────────────
+    // Credex offers 20% off the recommended spend.
+    // Don't apply Credex to tools being cancelled (newMonthlyCost = 0).
+    const credexSavings = newMonthlyCost > 0
+      ? Math.round(newMonthlyCost * CREDEX_DISCOUNT_RATE * 100) / 100
+      : 0;
 
-    // If there's Credex savings but no plan change, still highlight Credex savings
+    // If no plan change but Credex alone saves > $5/mo, surface the discount.
     if (recommendedAction === "keep_current" && credexSavings > 5) {
       recommendedAction = "use_credex";
-      reason = `Get 20% off your ${currentToolName} ${plan.name} plan by routing billing through Credex.`;
+      reason = `No plan change needed, but routing ${currentToolName} billing through Credex saves ${Math.round(CREDEX_DISCOUNT_RATE * 100)}% ($${Math.round(credexSavings)}/mo).`;
     }
 
-    totalOptimizedSpend += newMonthlyCost;
-    totalMonthlySavings += (currentCost - newMonthlyCost); // plan savings only
+    // Skip tools that are truly optimal with no Credex benefit worth showing.
+    if (recommendedAction === "keep_current") continue;
 
-    recommendations.push({
+    totalOptimizedSpend += newMonthlyCost;
+    totalMonthlySavings += currentCost - newMonthlyCost;
+
+    internalRecs.push({
       toolEntry: entry,
       currentToolName,
       currentPlanName: plan.name,
       currentMonthlyCost: currentCost,
       recommendedAction,
-      recommendedToolName: recommendedToolNameStr,
+      recommendedToolName,
       recommendedPlanName,
       newMonthlyCost,
       monthlySavings: currentCost - newMonthlyCost,
       credexSavings,
-      reason
+      reason,
     });
-  });
+  }
 
-  const totalCredexSavings = recommendations.reduce((sum, r) => sum + (r.credexSavings || 0), 0);
+  // Tools with keep_current (no actionable rec) still count toward optimized spend
+  for (const entry of input.tools) {
+    const hasRec = internalRecs.some(r => r.toolEntry.id === entry.id);
+    if (!hasRec) totalOptimizedSpend += entry.monthlySpend;
+  }
+
+  const totalCredexSavings = internalRecs.reduce((sum, r) => sum + r.credexSavings, 0);
   const totalAnnualPlanSavings = totalMonthlySavings * 12;
   const totalAnnualCredexSavings = totalCredexSavings * 12;
-  totalAnnualSavings = totalAnnualPlanSavings + totalAnnualCredexSavings;
+  const totalAnnualSavings = totalAnnualPlanSavings + totalAnnualCredexSavings;
 
-  const isAlreadyOptimal = totalMonthlySavings < SAVINGS_THRESHOLDS.OPTIMAL;
+  const isAlreadyOptimal = (totalMonthlySavings + totalCredexSavings) < SAVINGS_THRESHOLDS.OPTIMAL;
   const isHighSavings = (totalMonthlySavings + totalCredexSavings) >= SAVINGS_THRESHOLDS.SHOW_CREDEX;
 
-  // Transform recommendations to match ToolRecommendation interface
-  const formattedRecommendations: ToolRecommendation[] = recommendations.map(r => ({
+  const recommendations: ToolRecommendation[] = internalRecs.map(r => ({
     tool: r.currentToolName,
     currentPlan: { name: r.currentPlanName, price: r.currentMonthlyCost },
-    recommendedPlan: { name: r.recommendedPlanName || r.currentPlanName, price: r.newMonthlyCost },
+    recommendedPlan: {
+      name: r.recommendedPlanName ?? r.currentPlanName,
+      price: r.newMonthlyCost,
+    },
     savings: r.monthlySavings,
     reason: r.reason,
     recommendedAction: r.recommendedAction,
@@ -187,16 +196,15 @@ export function runAuditEngine(input: AuditInput): Omit<AuditResult, "id" | "cre
   }));
 
   return {
-    recommendations: formattedRecommendations,
+    recommendations,
     totalCurrentSpend,
     totalOptimizedSpend,
     totalMonthlySavings,
     totalCredexSavings,
     totalAnnualSavings,
     isAlreadyOptimal,
-    isHighSavings
+    isHighSavings,
   };
 }
 
-// Export alias for backwards compatibility
 export const runAudit = runAuditEngine;
