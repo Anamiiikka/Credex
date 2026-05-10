@@ -7,7 +7,6 @@ import { getPlan, calculateMonthlyCost } from "@/lib/pricing-data";
 import { ToolEntryRow } from "./ToolEntryRow";
 import { TeamInfo } from "./TeamInfo";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Plus, Calculator, Loader2 } from "lucide-react";
 
 export function SpendForm() {
@@ -116,19 +115,19 @@ export function SpendForm() {
   );
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <TeamInfo 
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <TeamInfo
         teamSize={state.teamSize} 
         useCase={state.useCase} 
         onChange={(updates) => setState(s => ({ ...s, ...updates }))} 
       />
       
-      <div className="space-y-4">
-        <h3 className="text-lg font-medium">Your AI Stack</h3>
+      <div className="space-y-3">
+        <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Your AI stack</p>
         {state.tools.length === 0 ? (
-          <Card className="p-8 text-center border-dashed text-muted-foreground">
-            No tools added yet. Click below to add your first AI tool.
-          </Card>
+          <div className="rounded-lg border border-dashed border-white/10 py-8 text-center text-sm text-slate-600">
+            No tools added yet — click below to add your first.
+          </div>
         ) : (
           <div className="space-y-4">
             {state.tools.map(tool => (
