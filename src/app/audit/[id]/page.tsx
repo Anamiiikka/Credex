@@ -10,15 +10,16 @@ import ShareButtons from "@/components/results/ShareButtons";
 import { AuditResult, ToolRecommendation } from "@/types";
 
 interface Props {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 // Dynamic OG tags per audit
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { id } = await params;
   const { data } = await supabase
     .from("audits")
     .select("total_monthly_savings, total_annual_savings")
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
 
   const savings = data?.total_monthly_savings ?? 0;
@@ -43,7 +44,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         : "My AI Spend Audit Results",
       description: "Free AI spend audit at credex.rocks",
       type: "website",
-      url: `https://credex.rocks/audit/${params.id}`,
+      url: `https://credex.rocks/audit/${id}`,
       images: [
         {
           url: "https://credex.rocks/og-image.png",
@@ -64,10 +65,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function AuditResultPage({ params }: Props) {
+  const { id } = await params;
   const { data, error } = await supabase
     .from("audits")
     .select("*")
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
 
   if (error || !data) notFound();
@@ -96,9 +98,9 @@ export default async function AuditResultPage({ params }: Props) {
           <h2 className="text-2xl font-bold text-slate-200 mb-4">
             Recommendations
           </h2>
-          {recommendations.map((rec) => (
+          {recommendations.map((rec, i) => (
             <ToolCard
-              key={`${rec.tool}-${rec.recommendedAction}`}
+              key={`${rec.tool}-${rec.recommendedAction}-${i}`}
               recommendation={rec}
             />
           ))}
@@ -120,13 +122,13 @@ export default async function AuditResultPage({ params }: Props) {
 
         {/* Share buttons — shown after results, never before */}
         <ShareButtons
-          auditId={params.id}
+          auditId={id}
           monthlySavings={auditResult.totalMonthlySavings}
         />
 
         {/* Lead capture form — shown after results, never before */}
         <LeadCaptureForm
-          auditId={params.id}
+          auditId={id}
           monthlySavings={auditResult.totalMonthlySavings}
         />
       </div>

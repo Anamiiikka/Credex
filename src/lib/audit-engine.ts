@@ -80,13 +80,18 @@ export function runAuditEngine(input: AuditInput): Omit<AuditResult, "id" | "cre
       // For simplicity, keep the one with the highest spend as "primary" and recommend dropping this one if it's not primary
       const primaryTool = [...siblings].sort((a, b) => b.monthlySpend - a.monthlySpend)[0];
       
-      if (primaryTool.toolId !== entry.toolId) {
+      if (primaryTool.id !== entry.id) {
         recommendedAction = "consolidate";
         // Conservative 50% estimate — user may keep some usage or migrate gradually.
         // Actual savings depend on migration completeness.
         newMonthlyCost = currentCost * 0.5; // Estimate partial savings
         recommendedToolNameStr = getToolDisplayName(primaryTool.toolId);
-        reason = `You're paying for two ${category} tools. Consider consolidating into ${recommendedToolNameStr} — estimated 50% savings on this subscription.`;
+        
+        if (primaryTool.toolId === entry.toolId) {
+          reason = `You have multiple ${currentToolName} subscriptions. Consider consolidating into a single Team or Enterprise plan for better management.`;
+        } else {
+          reason = `You're paying for multiple ${category} tools. Consider consolidating into ${recommendedToolNameStr} — estimated 50% savings on this subscription.`;
+        }
       }
     }
 
