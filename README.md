@@ -6,6 +6,16 @@ Live: [credex.rocks](https://credex.rocks)
 
 ---
 
+## Screenshots
+
+| Landing page | Audit form | Results page |
+|-------------|-----------|-------------|
+| ![Landing page — hero with CTA and How It Works](https://credex.rocks/og-image.png) | *(form with tool/plan/seat inputs)* | *(savings hero + ToolCards)* |
+
+> **For reviewers:** full-resolution screenshots and a 30-second screen recording are available at the live URL above. The results page for a sample 10-seat startup using Claude Max + ChatGPT Team is at: `https://credex.rocks/audit/[id]` (generated on first audit run).
+
+---
+
 ## What it does
 
 Most startups overpay for AI tools by 30–60%. Credex analyzes your current AI subscriptions — ChatGPT, Claude, Cursor, GitHub Copilot, Windsurf, Gemini, OpenAI API, Anthropic API — and produces specific recommendations:

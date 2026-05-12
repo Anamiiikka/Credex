@@ -1,5 +1,22 @@
 # Credex — Landing Page Copy
 
+## Social Proof Block
+
+**(Mocked — indicate as mocked on live site until real data available)**
+
+> "Found $1,200/mo in savings in 90 seconds. I immediately forwarded it to our CFO."
+> — *Alex T., CTO at a 15-person SaaS startup*
+
+> "We were paying for both Claude and ChatGPT for the whole team. Credex showed us the overlap in one screen."
+> — *Priya M., Engineering Manager*
+
+> "I was skeptical the numbers would be real. They were. $340/mo gone just from switching plans."
+> — *Sam K., Founder*
+
+**Supporting stat (mocked):** Used by 200+ startup teams · Average savings: $420/mo
+
+---
+
 ## Hero
 
 **Headline:**
