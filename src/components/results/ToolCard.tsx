@@ -50,7 +50,7 @@ export default function ToolCard({ recommendation }: Props) {
   const { colors: toolColors, abbrev } = TOOL_META[tool] ?? FALLBACK_META;
 
   return (
-    <div className="rounded-xl border border-white/8 bg-white/3 overflow-hidden">
+    <div className="rounded-xl border border-white/8 bg-white/3 overflow-hidden hover:border-white/15 transition-colors duration-200">
       {/* ── Header ── */}
       <div className="flex items-center justify-between flex-wrap gap-3 px-5 py-4 border-b border-white/6">
         {/* Tool identity */}

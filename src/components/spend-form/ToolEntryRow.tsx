@@ -20,10 +20,10 @@ export function ToolEntryRow({ entry, onUpdate, onRemove }: Props) {
 
   return (
     <div className="rounded-lg border border-white/8 bg-white/4 p-4 space-y-3">
-      <div className="flex items-end gap-3">
+      <div className="grid grid-cols-2 gap-3 md:flex md:items-end md:gap-3">
 
-        {/* Tool */}
-        <div className="flex-1 min-w-0 space-y-1.5">
+        {/* Tool — full row on mobile (col-span-2), flex-1 on desktop */}
+        <div className="col-span-2 md:col-span-1 flex-1 min-w-0 space-y-1.5">
           <label htmlFor={`tool-${entry.id}`} className="block text-xs font-medium text-slate-400">
             Tool
           </label>
@@ -46,8 +46,8 @@ export function ToolEntryRow({ entry, onUpdate, onRemove }: Props) {
           </Select>
         </div>
 
-        {/* Plan */}
-        <div className="flex-1 min-w-0 space-y-1.5">
+        {/* Plan — full row on mobile, flex-1 on desktop */}
+        <div className="col-span-2 md:col-span-1 flex-1 min-w-0 space-y-1.5">
           <label htmlFor={`plan-${entry.id}`} className="block text-xs font-medium text-slate-400">
             Plan
           </label>
@@ -67,7 +67,7 @@ export function ToolEntryRow({ entry, onUpdate, onRemove }: Props) {
         </div>
 
         {/* Seats */}
-        <div className="w-18 shrink-0 space-y-1.5">
+        <div className="w-18 shrink-0 space-y-1.5 md:w-18">
           <label htmlFor={`seats-${entry.id}`} className="block text-xs font-medium text-slate-400">
             Seats
           </label>
@@ -80,12 +80,12 @@ export function ToolEntryRow({ entry, onUpdate, onRemove }: Props) {
           />
         </div>
 
-        {/* Delete */}
+        {/* Delete — aligned to bottom-right on mobile */}
         <Button
           variant="ghost"
           size="icon"
           onClick={onRemove}
-          className="shrink-0 mb-0.5 text-slate-600 hover:text-red-400 hover:bg-red-400/10"
+          className="shrink-0 mb-0.5 text-slate-600 hover:text-red-400 hover:bg-red-400/10 self-end"
           aria-label="Remove tool"
         >
           <Trash2 className="w-4 h-4" />
