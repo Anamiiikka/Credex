@@ -234,3 +234,93 @@
 - Write `ECONOMICS.md` pricing model and unit economics
 - Final polish: loading states, error boundaries, responsive audit page
 
+## Day 6 — 2026-05-11
+
+**Hours worked:** ~3
+
+**What I built:**
+
+### Commit 1 — `feat: build landing page with hero, feature grid, and prominent CTA`
+- Replaced 2×2 feature pill grid with a 3-column value-prop section (Exact dollar savings / Plus 20% via Credex / No account needed)
+- Added a "How It Works" numbered section (3 steps) with hover-animated cards
+- Added a primary CTA button ("Audit My AI Spend") with scroll anchor to the form
+- Added trust signals below the CTA (✓ 2 minutes, ✓ No credit card, ✓ Instant results)
+- Restructured page into semantic `<section>` tags with IDs for anchor navigation
+
+### Commit 2 — `feat: add header navigation and footer components`
+- `Header.tsx` — sticky top, blurred backdrop, Credex logo + "How it works" nav link + "Free audit" CTA link
+- `Footer.tsx` — logo, pricing data attribution, Audit and Get Credex links
+- Wired both into `RootLayout` so they appear on every page
+
+### Commit 3 — `style: add micro-animations and card hover effects across all pages`
+- Landing page value-prop and How-It-Works cards: `hover:border-white/12 hover:bg-white/5 transition-all duration-200`
+- ToolCard on results page: `hover:border-white/15 transition-colors duration-200`
+- Hero CTA button: `active:scale-95` press feedback
+- Mobile responsiveness: ToolEntryRow uses `grid grid-cols-2` on mobile, `flex` on md+
+
+### Commit 4 — `docs: write ECONOMICS.md and LANDING_COPY.md`
+- `ECONOMICS.md` — unit economics model ($100/mo gross per customer), LTV:CAC analysis (>28×), path to $1M ARR (835 customers needed), risk table
+- `LANDING_COPY.md` — complete copy reference for all page sections including hero, value props, How It Works, results page variants, and FAQ
+
+**Bugs I hit and fixed:**
+- `ToolEntryRow` on mobile: the single-row `flex` layout was too cramped at 375px. Fixed by switching to `grid-cols-2` on mobile (Tool + Plan full-width stacked, Seats + Delete as a pair below).
+- `TeamInfo` and `ToolEntryRow` were showing raw IDs (e.g., `anthropic_api`) in Select triggers because `@base-ui/react`'s `SelectValue` renders the raw `value` string on initial render, not the `ItemText` content. Fixed by rendering display text directly in the `SelectTrigger` and removing `SelectValue` entirely.
+
+**What I learned:**
+- `@base-ui/react`'s `Select.Value` component is designed for controlled state — it reflects the raw `value` prop, not the child text of the selected `Item`. When you need to show a human-readable label, you must render it manually in the trigger. This is different from Radix's `SelectValue` which mirrors `ItemText`.
+- Having a sticky header immediately changes the feel from "prototype" to "product." It costs almost nothing to implement and is worth doing early.
+
+**Plan for tomorrow (Day 7):**
+- Expand README.md with architecture summary, quick start, 5 key decisions
+- Fill in ARCHITECTURE.md with Mermaid diagrams and scaling plan
+- Write REFLECTION.md (5 questions, 150–400 words each)
+- Write METRICS.md, TESTS.md, PROMPTS.md
+- Final code polish and Vercel deploy
+
+## Day 7 — 2026-05-12
+
+**Hours worked:** ~3
+
+**What I built:**
+
+### Commit 1 — `docs: write README.md with screenshots, quick start, and 5 key decisions`
+- Rewrote README from a 20-line stub to a full project document
+- Quick start section with environment variable table
+- Tech stack table (8 rows)
+- 5 key decisions with rationale: RSC for OG tags, Supabase RLS for data isolation, Groq over Anthropic for summaries, pure-TS audit engine over LLM, honeypot over CAPTCHA
+- Project structure tree, test commands, full database schema
+
+### Commit 2 — `docs: create ARCHITECTURE.md with Mermaid diagrams and scaling plan`
+- System diagram (Mermaid): browser → Vercel Edge → Supabase / Groq / Resend
+- Sequence diagram: full audit submission flow with 9 steps
+- Audit engine logic pseudocode (consolidation → plan-fit → Credex overlay)
+- Component architecture tree
+- 10K audits/day scaling plan: 5 concrete steps (edge caching, Groq queue, pgBouncer, rate limiting)
+
+### Commit 3 — `docs: write REFLECTION.md and DEVLOG.md with 7 daily entries`
+- `REFLECTION.md` — 5 answers (250–400 words each):
+  1. Core value prop evolution: "find cheaper plans" → "certainty about AI spend"
+  2. Hardest technical problem: audit engine math (flat price vs. price × seats)
+  3. What I'd do differently: better plan coverage, CTA A/B testing, admin view
+  4. Building for a specific user: specificity and no upfront email request
+  5. PMF validation: CTA click rate as leading signal, Slack community test
+- `DEVLOG.md` — Days 6 and 7 entries added
+
+### Commit 4 — `docs: write METRICS.md, TESTS.md, PRICING_DATA.md, and PROMPTS.md`
+- `METRICS.md` — North Star metric (Credex CTA click rate on high-savings results), 6 leading and 4 lagging metrics with targets and measurement methods
+- `TESTS.md` — full test documentation: 41 test cases across 3 test files, rationale for each suite, coverage gaps, how to run
+- `PROMPTS.md` — the 3 LLM interactions in the codebase documented with full prompts, model choice rationale, temperature settings, and example outputs
+
+### Commit 5 — `chore: final polish, deploy to Vercel, update README with live URL`
+- Fixed select display bug (raw IDs showing in form dropdowns)
+- Fixed ToolCard color inconsistencies (savings amount always emerald, 2-letter tool abbreviations, Claude → purple badge)
+- Vercel deploy configuration reviewed; environment variables documented in `.env.local.example`
+
+**Bugs I hit and fixed:**
+- `TOOL_COLORS` in ToolCard used a single letter for the badge (`tool[0]`), causing `ChatGPT`, `Claude`, and `Cursor` all to show "C". Fixed with a `TOOL_META` lookup providing 2-letter abbreviations (GP, Cl, Cu, GH, WS, OA, AN, Ge).
+- `Claude` and `consolidate` action badge were both orange, creating a false association. Fixed by changing Claude's badge to purple (closer to brand) and `consolidate` to rose.
+
+**What I learned:**
+- When a design system (shadcn/Base UI) has breaking changes from its previous major version, reading the source in `node_modules` is faster than searching docs. The `SelectValue` issue was resolved in 10 minutes by reading the Base UI source directly.
+- Writing the REFLECTION after the work is done reveals patterns you didn't notice during building. The "certainty not savings" insight only crystallized when writing the reflection — it reframes what the product actually is.
+
