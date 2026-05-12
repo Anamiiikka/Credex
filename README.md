@@ -44,12 +44,12 @@ npm test
 
 ### Environment variables
 
-| Variable | Purpose |
-|----------|---------|
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon key (public) |
-| `GROQ_API_KEY` | Groq API key for AI summary generation |
-| `RESEND_API_KEY` | Resend key for confirmation emails |
+| Variable | Required | Purpose |
+|----------|---------|---------|
+| `NEXT_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase anon key (public) |
+| `GROQ_API_KEY` | No | Groq key for AI summaries (falls back to template) |
+| `RESEND_API_KEY` | No | Resend key for confirmation emails |
 
 ---
 
